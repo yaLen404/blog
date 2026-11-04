@@ -53,7 +53,7 @@ function readTime(text) {
 }
 
 const fmtDate = (d) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-const fmtDateLong = (d) => `${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日`;
+const fmtDateLong = (d) => fill(copy.pages.post.dateFormat, { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() });
 
 /* ------------------------------------------------------------------ *
  * Markdown：够用就好的一小套语法
@@ -137,7 +137,7 @@ function renderBlocks(lines, ctx) {
       i++;
       const label = langRaw || 'text';
       out.push(
-        `<div class="code-block" data-lang="${esc(label)}"><button class="copy-btn" type="button" aria-label="复制代码">复制</button>` +
+        `<div class="code-block" data-lang="${esc(label)}"><button class="copy-btn" type="button" aria-label="${esc(copy.meta.copyCode)}" data-label="${esc(copy.meta.copyCode)}" data-done="${esc(copy.meta.copiedCode)}">${esc(copy.meta.copyCode)}</button>` +
         `<pre><code${lang ? ` class="language-${esc(lang)}"` : ''}>${esc(buf.join('\n'))}</code></pre></div>`
       );
       continue;
@@ -352,7 +352,7 @@ function header(active) {
       <span class="brand-mark">${esc((copy.site.title || '叶').slice(0, 1))}</span>
       <span class="brand-text">${esc(copy.site.title)}<em>${esc(copy.site.handle)}</em></span>
     </a>
-    <nav class="nav" aria-label="主导航">${nav}</nav>
+    <nav class="nav" aria-label="${esc(copy.meta.navLabel)}">${nav}</nav>
     <div class="head-tools">
       <button class="icon-btn" type="button" data-search aria-label="${esc(copy.meta.searchAria)}" title="${esc(copy.search.placeholder)}">${ICONS.search}</button>
       <button class="icon-btn" type="button" data-theme-toggle aria-label="${esc(copy.meta.themeAria)}" title="${esc(copy.meta.themeAria)}">
@@ -383,7 +383,7 @@ function footer() {
 function searchOverlay() {
   return `<div class="palette" data-palette data-index="${u('search.json')}" hidden>
   <div class="palette-backdrop" data-palette-close></div>
-  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="搜索文章">
+  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="${esc(copy.search.dialogLabel)}">
     <div class="palette-input">
       ${ICONS.search}
       <input type="search" data-palette-input placeholder="${esc(copy.search.placeholder)}" autocomplete="off" spellcheck="false">
@@ -397,7 +397,9 @@ function searchOverlay() {
 }
 
 function layout({ title, description, content, active = '', bodyClass = '', math = false, canonical = '/', headExtra = '' }) {
-  const fullTitle = title ? `${title} · ${copy.site.title}` : `${copy.site.title} · ${copy.site.tagline}`;
+  const fullTitle = title
+    ? fill(copy.meta.titleTemplate, { page: title, site: copy.site.title })
+    : `${copy.site.title} · ${copy.site.tagline}`;
   const chrome = { paper: ['#f7f3ea', '#131210'], minimal: ['#ffffff', '#0a0a0a'], terminal: ['#070b09', '#070b09'], aurora: ['#f6f7fc', '#0b0a16'] }[site.skin] || ['#f7f3ea', '#131210'];
   return `<!doctype html>
 <html lang="${site.lang}" data-theme="light" data-skin="${esc(site.skin || 'paper')}">
@@ -599,8 +601,8 @@ writeFile('index.html', layout({
 }));
 
 writeFile('archive/index.html', layout({
-  title: copy.pages.archive.title,
-  description: `全部 ${posts.length} 篇文章，按时间倒序。`,
+  title: copy.pages.archive.metaTitle,
+  description: fill(copy.pages.archive.metaDescription, { n: posts.length }),
   content: archiveContent,
   active: 'archive',
   bodyClass: 'page-archive',
@@ -608,8 +610,8 @@ writeFile('archive/index.html', layout({
 }));
 
 writeFile('tags/index.html', layout({
-  title: copy.pages.tags.title,
-  description: '按标签浏览文章。',
+  title: copy.pages.tags.metaTitle,
+  description: fill(copy.pages.tags.metaDescription, { n: tags.length }),
   content: tagsContent,
   active: 'tags',
   bodyClass: 'page-tags',
@@ -618,8 +620,8 @@ writeFile('tags/index.html', layout({
 
 for (const [name, list] of tags) {
   writeFile(`tags/${slugify(name)}/index.html`, layout({
-    title: `标签：${name}`,
-    description: `标签 ${name} 下的 ${list.length} 篇文章。`,
+    title: fill(copy.pages.tag.metaTitle, { name }),
+    description: fill(copy.pages.tag.metaDescription, { name, n: list.length }),
     content: tagPage(name, list),
     active: 'tags',
     bodyClass: 'page-tag',
@@ -656,7 +658,7 @@ const contact = `<div class="contact-card">
 
 writeFile('about/index.html', layout({
   title: copy.pages.about.title,
-  description: aboutParsed.data.description || `${copy.pages.about.title} · ${copy.site.title}`,
+  description: aboutParsed.data.description || copy.pages.about.metaDescription,
   content: `<section class="wrap about-shell">
   <div class="page-head">
     <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.about.eyebrow)}</p>
@@ -681,21 +683,21 @@ const SKIN_META = [
 ];
 
 const stylesContent = `<section class="wrap page-head">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Styles</p>
-  <h1 class="page-title">四种风格，挑一个</h1>
-  <p class="page-lede">同一份内容、同一套结构，只换视觉。下面看到的是真实页面（等比缩放），点「全屏预览」可以滚动查看完整效果；文章页也能用同样方式预览。</p>
+  <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.styles.eyebrow)}</p>
+  <h1 class="page-title">${esc(copy.styles.title)}</h1>
+  <p class="page-lede">${esc(copy.styles.lede)}</p>
 </section>
 <section class="wrap section">
   <div class="skin-grid">
     ${SKIN_META.map((s) => `<article class="skin-card">
-      <div class="skin-shot"><iframe src="${u('/')}?skin=${s.id}&amp;theme=light" title="${s.name} 风格预览" loading="lazy" scrolling="no"></iframe></div>
+      <div class="skin-shot"><iframe src="${u('/')}?skin=${s.id}&amp;theme=light" title="${esc(s.name)}" loading="lazy" scrolling="no"></iframe></div>
       <div class="skin-body">
-        <h2 class="skin-name">${s.name}<code>${s.id}</code></h2>
-        <p class="skin-desc">${s.desc}</p>
-        <div class="skin-tags">${s.tags.map((t) => `<span>${t}</span>`).join('')}</div>
+        <h2 class="skin-name">${esc(s.name)}<code>${s.id}</code></h2>
+        <p class="skin-desc">${esc(s.desc)}</p>
+        <div class="skin-tags">${s.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>
         <div class="skin-actions">
-          <a href="${u('/')}?skin=${s.id}" target="_blank" rel="noopener">全屏预览 →</a>
-          <a href="${u('posts/moe/')}?skin=${s.id}" target="_blank" rel="noopener">看一篇长文</a>
+          <a href="${u('/')}?skin=${s.id}" target="_blank" rel="noopener">${esc(copy.styles.preview)}</a>
+          <a href="${u('posts/moe/')}?skin=${s.id}" target="_blank" rel="noopener">${esc(copy.styles.readPost)}</a>
         </div>
       </div>
     </article>`).join('\n    ')}
@@ -716,8 +718,8 @@ const stylesContent = `<section class="wrap page-head">
 </script>`;
 
 writeFile('styles/index.html', layout({
-  title: '样式预览',
-  description: '四套视觉风格预览：纸墨、极简、终端、极光。',
+  title: copy.styles.metaTitle,
+  description: copy.styles.metaDescription,
   content: stylesContent,
   bodyClass: 'page-styles skins-page',
   canonical: 'styles/',
@@ -725,8 +727,8 @@ writeFile('styles/index.html', layout({
 }));
 
 writeFile('404.html', layout({
-  title: '页面不存在',
-  description: '这个地址好像没有内容。',
+  title: copy.pages.notFound.metaTitle,
+  description: copy.pages.notFound.metaDescription,
   content: `<section class="wrap notfound">
   <p class="nf-code">${esc(copy.pages.notFound.code)}</p>
   <h1>${esc(copy.pages.notFound.title)}</h1>

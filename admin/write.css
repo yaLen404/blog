@@ -281,6 +281,12 @@ button { cursor: pointer; }
 .app.site-mode .side { display: none; }
 .app.site-mode .preview { display: none; }
 
+/* ---------- 独立页面（关于页） ---------- */
+.app.doc-mode { grid-template-columns: minmax(0, 1fr); }
+.app.doc-mode .side { display: none; }
+.form.is-page .meta .row { display: none; }
+.form.is-page #btn-del { display: none; }
+
 .siteform { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
 .siteform-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 24px 40px; }
 .siteform-note {

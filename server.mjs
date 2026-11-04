@@ -12,6 +12,7 @@ const SITE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(SITE, 'dist');
 const ADMIN = path.join(SITE, 'admin');
 const POSTS = path.join(SITE, 'content', 'posts');
+const PAGES = path.join(SITE, 'content', 'pages');
 const ASSETS = path.join(SITE, 'assets');
 const PORT = Number(process.env.PORT) || 4173;
 const HOST = process.env.HOST || '127.0.0.1';
@@ -156,18 +157,24 @@ async function api(req, res, pathname, query) {
 
   if (pathname === '/api/post' && req.method === 'GET') {
     const file = query.get('file') || '';
-    if (!FILE_RE.test(file) || !fs.existsSync(path.join(POSTS, file))) return json(res, 404, { error: '文章不存在' });
-    return json(res, 200, { file, content: fs.readFileSync(path.join(POSTS, file), 'utf8') });
+    const kind = query.get('kind') === 'page' ? 'page' : 'post';
+    const dir = kind === 'page' ? PAGES : POSTS;
+    if (!FILE_RE.test(file) || !fs.existsSync(path.join(dir, file))) return json(res, 404, { error: '文章不存在' });
+    return json(res, 200, { file, kind, content: fs.readFileSync(path.join(dir, file), 'utf8') });
   }
 
   if (pathname === '/api/save' && req.method === 'POST') {
     const body = await readJson(req);
     const file = body.file || '';
+    const kind = body.kind === 'page' ? 'page' : 'post';
+    const dir = kind === 'page' ? PAGES : POSTS;
     if (!FILE_RE.test(file)) return json(res, 400, { error: '文件名不合法' });
-    fs.writeFileSync(path.join(POSTS, file), String(body.content || ''), 'utf8');
+    fs.writeFileSync(path.join(dir, file), String(body.content || ''), 'utf8');
     const build = rebuild();
-    const slug = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
-    return json(res, build.ok ? 200 : 500, { ...build, url: `/${'posts'}/${slug}/` });
+    const url = kind === 'page'
+      ? `/${file.replace(/\.md$/, '')}/`
+      : `/posts/${file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '')}/`;
+    return json(res, build.ok ? 200 : 500, { ...build, url });
   }
 
   if (pathname === '/api/create' && req.method === 'POST') {

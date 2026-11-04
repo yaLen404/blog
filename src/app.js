@@ -93,10 +93,10 @@
         document.execCommand('copy');
         ta.remove();
       }
-      btn.textContent = '已复制';
+      btn.textContent = btn.dataset.done || '已复制';
       btn.classList.add('is-done');
       setTimeout(() => {
-        btn.textContent = '复制';
+        btn.textContent = btn.dataset.label || '复制';
         btn.classList.remove('is-done');
       }, 1600);
     });

@@ -147,32 +147,43 @@
     'pages.archive.title': '归档页 · 标题',
     'pages.archive.lede': '归档页 · 说明（{n} = 篇数）',
     'pages.archive.tagsLink': '归档页 · 标签链接',
+    'pages.archive.metaTitle': '归档页 · 浏览器标题',
+    'pages.archive.metaDescription': '归档页 · 搜索摘要',
     'pages.tags.eyebrow': '标签页 · 小标题',
     'pages.tags.title': '标签页 · 标题',
     'pages.tags.lede': '标签页 · 说明（{n} = 标签数）',
+    'pages.tags.metaTitle': '标签页 · 浏览器标题',
+    'pages.tags.metaDescription': '标签页 · 搜索摘要',
     'pages.tag.eyebrow': '单标签页 · 小标题',
     'pages.tag.lede': '单标签页 · 说明（{n} = 篇数）',
     'pages.tag.back': '单标签页 · 返回链接',
+    'pages.tag.metaTitle': '单标签页 · 浏览器标题（{name}）',
+    'pages.tag.metaDescription': '单标签页 · 搜索摘要',
     'pages.about.eyebrow': '关于页 · 小标题',
     'pages.about.title': '关于页 · 标题',
     'pages.about.contactTitle': '关于页 · 联系卡片标题',
     'pages.about.contactLead': '关于页 · 有邮箱时',
     'pages.about.contactLeadNoEmail': '关于页 · 无邮箱时',
+    'pages.about.metaDescription': '关于页 · 搜索摘要',
     'pages.post.minutes': '文章页 · 阅读时长（{n} = 分钟）',
     'pages.post.minutesShort': '列表页 · 阅读时长',
     'pages.post.toc': '文章页 · 目录标题',
     'pages.post.prev': '文章页 · 上一篇',
     'pages.post.next': '文章页 · 下一篇',
+    'pages.post.dateFormat': '文章页 · 日期格式（{y} {m} {d}）',
     'pages.notFound.code': '404 · 大数字',
     'pages.notFound.title': '404 · 标题',
     'pages.notFound.text': '404 · 说明',
     'pages.notFound.home': '404 · 回首页按钮',
     'pages.notFound.search': '404 · 搜索按钮',
+    'pages.notFound.metaTitle': '404 · 浏览器标题',
+    'pages.notFound.metaDescription': '404 · 搜索摘要',
     'search.placeholder': '搜索框占位文字',
     'search.empty': '搜索无结果提示',
     'search.hintSelect': '搜索 · 选择提示',
     'search.hintOpen': '搜索 · 打开提示',
     'search.hintClose': '搜索 · 关闭提示',
+    'search.dialogLabel': '搜索 · 无障碍名称',
     'footer.note': '页脚说明',
     'footer.rss': '页脚 · RSS',
     'footer.email': '页脚 · 邮箱',
@@ -180,6 +191,17 @@
     'meta.brandAria': '无障碍 · 品牌链接',
     'meta.searchAria': '无障碍 · 搜索按钮',
     'meta.themeAria': '无障碍 · 主题按钮',
+    'meta.navLabel': '无障碍 · 导航',
+    'meta.titleTemplate': '浏览器标题格式（{page} · {site}）',
+    'meta.copyCode': '代码块 · 复制按钮',
+    'meta.copiedCode': '代码块 · 已复制提示',
+    'styles.metaTitle': '样式页 · 浏览器标题',
+    'styles.metaDescription': '样式页 · 搜索摘要',
+    'styles.eyebrow': '样式页 · 小标题',
+    'styles.title': '样式页 · 大标题',
+    'styles.lede': '样式页 · 说明',
+    'styles.preview': '样式页 · 预览按钮',
+    'styles.readPost': '样式页 · 看文章按钮',
   };
 
   const SITE_GROUPS = {
@@ -190,6 +212,7 @@
     search: '搜索面板',
     footer: '页脚',
     meta: '无障碍标签',
+    styles: '样式预览页（/styles/）',
   };
 
   const PAGE_NAMES = {
@@ -283,11 +306,12 @@
     tab = next;
     document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('is-active', b.dataset.tab === next));
     const siteMode = next === 'site';
+    const docMode = next === 'about';
     els.app.classList.toggle('site-mode', siteMode);
+    els.app.classList.toggle('doc-mode', docMode);
     els.siteform.hidden = !siteMode;
-    els.empty.hidden = siteMode || !!current;
-    els.form.hidden = siteMode || !current;
-    $('btn-new').hidden = siteMode;
+    $('btn-new').hidden = siteMode || docMode;
+
     if (siteMode) {
       previewOpen = false;
       els.preview.hidden = true;
@@ -297,13 +321,34 @@
       } catch (err) {
         toast(err.message, true);
       }
+      return;
+    }
+
+    if (docMode) {
+      try {
+        await openPost('about.md', 'page');
+      } catch (err) {
+        toast(err.message, true);
+      }
+      return;
+    }
+
+    // 回到文章列表
+    els.form.classList.remove('is-page');
+    if (!current || current.kind === 'page') {
+      current = null;
+      els.form.hidden = true;
+      els.empty.hidden = false;
+    } else {
+      els.form.hidden = false;
+      els.empty.hidden = true;
     }
   }
 
   document.querySelectorAll('.tab').forEach((b) => {
     b.addEventListener('click', () => {
       if (b.dataset.tab === tab) return;
-      if (tab === 'posts' && dirty && !window.confirm('文章还没保存，确定离开吗？')) return;
+      if (tab !== 'site' && dirty && !window.confirm('还有没保存的改动，确定离开吗？')) return;
       if (tab === 'site' && siteDirty && !window.confirm('文案还没保存，确定离开吗？')) return;
       switchTab(b.dataset.tab);
     });
@@ -338,9 +383,9 @@
   }
 
   /* ---------- 打开 / 新建 ---------- */
-  async function openPost(file) {
-    const data = await api(`/api/post?file=${encodeURIComponent(file)}`);
-    current = { file: data.file, content: data.content, extra: [] };
+  async function openPost(file, kind = 'post') {
+    const data = await api(`/api/post?kind=${kind}&file=${encodeURIComponent(file)}`);
+    current = { kind, file: data.file, content: data.content, extra: [] };
     const { meta, body } = parseFront(data.content);
     current.extra = meta.extra || [];
     els.title.value = meta.title || '';
@@ -351,12 +396,13 @@
     els.toc.checked = !!meta.toc;
     els.body.value = body;
     els.file.textContent = data.file;
+    els.form.classList.toggle('is-page', kind === 'page');
     els.form.hidden = false;
     els.empty.hidden = true;
     setDirty(false);
     updateCount();
     renderPosts();
-    if (previewOpen) showPreview(`/posts/${slugOf(data.file)}/`);
+    if (previewOpen) showPreview(kind === 'page' ? `/${data.file.replace(/\.md$/, '')}/` : `/posts/${slugOf(data.file)}/`);
   }
 
   function toLocalInput(d) {
@@ -386,20 +432,23 @@
   /* ---------- 保存 ---------- */
   async function save({ silent = false } = {}) {
     if (!current) return;
+    const isPage = current.kind === 'page';
     const meta = {
-      title: els.title.value.trim() || '未命名文章',
-      date: fromInputDate(els.date.value),
+      title: els.title.value.trim() || (isPage ? '未命名页面' : '未命名文章'),
       description: els.desc.value.trim(),
-      tags: els.tags.value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
-      cover: els.cover.value.trim(),
-      toc: els.toc.checked,
       extra: current.extra || [],
+      ...(isPage ? {} : {
+        date: fromInputDate(els.date.value),
+        tags: els.tags.value.split(/[,，]/).map((s) => s.trim()).filter(Boolean),
+        cover: els.cover.value.trim(),
+        toc: els.toc.checked,
+      }),
     };
     const content = serialize(meta, els.body.value);
     const btn = $('btn-save');
     btn.disabled = true;
     try {
-      const data = await postJSON('/api/save', { file: current.file, content });
+      const data = await postJSON('/api/save', { kind: current.kind || 'post', file: current.file, content });
       current.content = content;
       setDirty(false);
       await loadPosts();
