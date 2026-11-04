@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-skin="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: dark)">
+<title>用 200 行 Node 写一个静态博客 · 叶志汉</title>
+<meta name="description" content="不装框架、不拉依赖：一个 Markdown 目录、一份模板、一个 build.mjs，就足够撑起一个写起来顺手的个人博客。记录这套站点的设计取舍。">
+<meta name="author" content="叶志汉">
+<meta property="og:type" content="website">
+<meta property="og:title" content="用 200 行 Node 写一个静态博客 · 叶志汉">
+<meta property="og:description" content="不装框架、不拉依赖：一个 Markdown 目录、一份模板、一个 build.mjs，就足够撑起一个写起来顺手的个人博客。记录这套站点的设计取舍。">
+<meta property="og:site_name" content="叶志汉">
+<meta property="og:url" content="https://yalen404.github.io/blog/posts/build-a-blog/">
+<link rel="canonical" href="https://yalen404.github.io/blog/posts/build-a-blog/">
+<link rel="alternate" type="application/rss+xml" title="叶志汉" href="/blog/rss.xml">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22%231c1a17%22%2F%3E%3Ctext%20x%3D%2216%22%20y%3D%2222%22%20font-family%3D%22serif%22%20font-size%3D%2218%22%20fill%3D%22%23f6f2ea%22%20text-anchor%3D%22middle%22%3E%E5%8F%B6%3C%2Ftext%3E%3C%2Fsvg%3E">
+<script>(function(){try{var qp=new URLSearchParams(location.search);var t=qp.get('theme')||localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var s=qp.get('skin');if(s&&["paper","minimal","terminal","aurora"].indexOf(s)>-1)document.documentElement.dataset.skin=s}catch(e){}})();</script>
+<link rel="stylesheet" href="/blog/assets/styles.css?v=c9c51339">
+<link rel="stylesheet" href="/blog/assets/skins.css?v=2ef315c1">
+
+
+</head>
+<body class="page-post">
+<a class="skip" href="#main">跳到正文</a>
+<header class="site-head" data-head>
+  <div class="wrap head-inner">
+    <a class="brand" href="/blog/" aria-label="返回首页">
+      <span class="brand-mark">叶</span>
+      <span class="brand-text">叶志汉<em>Zhihan</em></span>
+    </a>
+    <nav class="nav" aria-label="主导航"><a href="/blog/" class="is-active" aria-current="page">文章</a><a href="/blog/archive/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></nav>
+    <div class="head-tools">
+      <button class="icon-btn" type="button" data-search aria-label="搜索文章（快捷键 /）" title="搜索标题、标签或正文…"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深浅色" title="切换深浅色">
+        <span class="when-light"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></span><span class="when-dark"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg></span>
+      </button>
+    </div>
+  </div>
+</header>
+<main id="main"><div class="reading-bar" data-progress></div>
+<article class="wrap post">
+  <header class="post-head">
+    <p class="post-kicker">
+      <time datetime="2026-11-04T01:30:00.000Z">2026 年 11 月 4 日</time>
+      <span class="dot">·</span><span>约 3 分钟</span>
+      <span class="dot">·</span><a href="/blog/tags/前端/">前端</a><span class="sep">/</span><a href="/blog/tags/工程实践/">工程实践</a><span class="sep">/</span><a href="/blog/tags/静态站点/">静态站点</a>
+    </p>
+    <h1 class="post-title">用 200 行 Node 写一个静态博客</h1>
+    <p class="post-lead">不装框架、不拉依赖：一个 Markdown 目录、一份模板、一个 build.mjs，就足够撑起一个写起来顺手的个人博客。记录这套站点的设计取舍。</p>
+  </header>
+  
+  <div class="post-layout">
+    <div class="prose" data-prose data-toc-source><p>市面上的博客框架已经足够多了，但我最后只写了三百来行的 <code>build.mjs</code>。理由很朴素：<strong>我想要的东西，只是一个把 Markdown 变成 HTML 的脚本。</strong></p>
+<h2 id="为什么不上框架">为什么不上框架</h2>
+<p>Next.js、Astro、Hugo 都很成熟，代价是：</p>
+<ul><li>一套需要跟进的构建链（每年都有 breaking change）；</li><li>一堆为了&quot;通用&quot;而存在的抽象，读一篇博客要穿越五层 layout；</li><li>出问题时，debug 的是框架而不是我的文章。</li></ul>
+<p>我一个人写、一个人维护，最需要的不是扩展性，而是<strong>半年后打开还能看懂</strong>。</p>
+<p>所以这套站点的全部依赖是：Node 自带模块、一个 CSS 文件、一个 JS 文件。没有 <code>node_modules</code>。</p>
+<h2 id="目录长什么样">目录长什么样</h2>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code class="language-plaintext">personal-blog/
+├── content/
+│   ├── posts/          # 文章：一个 .md 一篇
+│   └── pages/about.md  # 独立页面
+├── src/
+│   ├── styles.css      # 全部样式
+│   ├── app.js          # 主题 / 搜索 / 目录 / 复制
+│   └── math.js         # KaTeX 初始化
+├── assets/             # 图片
+├── build.mjs           # 生成器
+├── server.mjs          # 本地预览
+└── dist/               # 产物（不提交）</code></pre></div>
+<p>写新文章的流程只有两步：</p>
+<div class="code-block" data-lang="bash"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code class="language-bash"># 1. 新建 content/posts/2026-11-20-whatever.md，写 front matter 和正文
+# 2. 生成
+node build.mjs</code></pre></div>
+<h2 id="front-matter-就是全部配置">front matter 就是全部配置</h2>
+<p>每篇文章头部的一小段 YAML 决定了它出现在哪里、带什么标签、要不要显示目录：</p>
+<div class="code-block" data-lang="yaml"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code class="language-yaml">---
+title: 用 200 行 Node 写一个静态博客
+date: 2026-11-04 09:30:00
+description: 一句话摘要，会出现在列表页和搜索结果里。
+tags:
+  - 前端
+  - 静态站点
+cover: /images/cover.svg
+toc: true
+---</code></pre></div>
+<p>标题、摘要、标签、封面、目录开关都在这里。列表页、标签页、RSS、搜索索引，全部由这些字段推出来——写一次，六处生效。</p>
+<h2 id="markdown-只支持我真正会用的语法">Markdown 只支持我真正会用的语法</h2>
+<p>写一个完整的 CommonMark 解析器是件吃力不讨好的事。我的选择是：<strong>支持我写文章时会用到的子集</strong>。</p>
+<ul><li>标题、段落、粗体、斜体、行内代码、链接、图片；</li><li>有序 / 无序列表（含一层嵌套）、引用、分隔线；</li><li>表格、围栏代码块、<code>$$</code> 公式块；</li><li>独立成段的图片自动变成 <code>figure</code> + 图注。</li></ul>
+<p>这个子集之外的东西（脚注、定义列表、嵌套三层的引用）我一篇也没用过，就不写。</p>
+<p>代价是解析器只有两百行，好处是<strong>每个分支我都知道为什么存在</strong>。碰到 bug，改的是自己写的代码。</p>
+<h2 id="数学公式走离线-katex">数学公式走离线 KaTeX</h2>
+<p>博客里会写推理相关的推导，公式必须好看。KaTeX 从 CDN 引最省事，但我不喜欢页面加载依赖别人的服务器——断网就变成一堆 <code>\frac</code>。</p>
+<p>所以构建时把 <code>katex.min.css</code>、<code>katex.min.js</code>、字体一起拷进 <code>dist/vendor/</code>，只有正文里真的出现 <code>$...$</code> 的页面才加载它们。文章页体积多了几十 KB，换来的是<strong>永远能打开、永远能渲染</strong>。</p>
+<h2 id="搜索是一个-3-kb-的-json">搜索是一个 3 KB 的 JSON</h2>
+<p>全文搜索没必要上索引服务。构建时把每篇文章的标题、日期、标签、摘要和正文前 4000 字导出成一个 <code>search.json</code>，浏览器端按字段权重算分：</p>
+<div class="table-wrap"><table><thead><tr><th>命中位置</th><th>权重</th></tr></thead><tbody><tr><td>标题</td><td>12</td></tr><tr><td>标签</td><td>6</td></tr><tr><td>摘要</td><td>4</td></tr><tr><td>正文</td><td>2</td></tr></tbody></table></div>
+<p>按 <code>/</code> 或 <code>⌘K</code> 打开搜索面板，上下键选择，回车跳转。多关键词时每个词都必须命中——宁可少给结果，也不要给一堆不相关的。</p>
+<h2 id="深浅色不能闪">深浅色不能闪</h2>
+<p>主题在 <code>&lt;head&gt;</code> 里同步决定，而不是等 JS 加载完再切换：</p>
+<div class="code-block" data-lang="html"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code class="language-html">&lt;script&gt;
+  (function () {
+    try {
+      var t = localStorage.getItem(&#39;theme&#39;);
+      if (!t) t = matchMedia(&#39;(prefers-color-scheme: dark)&#39;).matches ? &#39;dark&#39; : &#39;light&#39;;
+      document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  })();
+&lt;/script&gt;</code></pre></div>
+<p>这段脚本在样式表之前执行，浏览器第一帧就已经是正确的颜色。整站的配色交给 CSS 变量，切换主题只是换一个 <code>data-theme</code> 属性。</p>
+<h2 id="部署">部署</h2>
+<p><code>dist/</code> 是一堆纯静态文件，扔到任何地方都能跑：GitHub Pages、Cloudflare Pages、一台装 nginx 的机器，甚至 U 盘。</p>
+<p>唯一要注意的是路径：站点部署在子路径（比如 <code>username.github.io/blog/</code>）时，把 <code>site.config.mjs</code> 里的 <code>base</code> 从 <code>/</code> 改成 <code>/blog/</code>，全站链接会自动跟着变。</p>
+<h2 id="小结">小结</h2>
+<p>这套东西没有解决任何&quot;通用问题&quot;，它只解决我的问题：<strong>打开编辑器，写 Markdown，运行一条命令，得到一个好看的页面。</strong></p>
+<p>工具的价值不在于它能做多少事，而在于它让你少做多少与写作无关的事。</p></div>
+    <aside class="toc" data-toc><p class="toc-title">本文目录</p><ul><li class="lvl-2"><a href="#undefined为什么不上框架">为什么不上框架</a></li><li class="lvl-2"><a href="#undefined目录长什么样">目录长什么样</a></li><li class="lvl-2"><a href="#undefinedfront-matter-就是全部配置">front matter 就是全部配置</a></li><li class="lvl-2"><a href="#undefinedmarkdown-只支持我真正会用的语法">Markdown 只支持我真正会用的语法</a></li><li class="lvl-2"><a href="#undefined数学公式走离线-katex">数学公式走离线 KaTeX</a></li><li class="lvl-2"><a href="#undefined搜索是一个-3-kb-的-json">搜索是一个 3 KB 的 JSON</a></li><li class="lvl-2"><a href="#undefined深浅色不能闪">深浅色不能闪</a></li><li class="lvl-2"><a href="#undefined部署">部署</a></li><li class="lvl-2"><a href="#undefined小结">小结</a></li></ul></aside>
+  </div>
+  <footer class="post-foot">
+    <div class="post-tags"><a class="tag" href="/blog/tags/前端/">前端</a><a class="tag" href="/blog/tags/工程实践/">工程实践</a><a class="tag" href="/blog/tags/静态站点/">静态站点</a></div>
+    <nav class="post-nav">
+      <a class="nav-prev" href="/blog/posts/moe/"><span>← 上一篇</span><strong>十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信</strong></a>
+      <span></span>
+    </nav>
+  </footer>
+</article></main>
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <div class="foot-left">
+      <p class="foot-sign">© 2026 叶志汉</p>
+      <p class="foot-note">纯手工静态站 · 由 200 行 Node 脚本从 Markdown 生成</p>
+    </div>
+    <div class="foot-links">
+      <a href="/blog/rss.xml"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 19a1 1 0 1 0 0-.01"/><path d="M5 13a6 6 0 0 1 6 6M5 7a12 12 0 0 1 12 12"/></svg>RSS</a>
+      
+      <a href="https://github.com/yaLen404" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+<div class="palette" data-palette data-index="/blog/search.json" hidden>
+  <div class="palette-backdrop" data-palette-close></div>
+  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="搜索文章">
+    <div class="palette-input">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input type="search" data-palette-input placeholder="搜索标题、标签或正文…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="palette-list" data-palette-list></ul>
+    <p class="palette-empty" data-palette-empty hidden>没有找到相关文章</p>
+    <div class="palette-foot"><span>↑ ↓ 选择</span><span>↵ 打开</span><span>Esc 关闭</span></div>
+  </div>
+</div>
+<script src="/blog/assets/app.js?v=9e8635b6" defer></script>
+
+</body>
+</html>

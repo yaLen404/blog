@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>叶志汉</title>
+    <link>https://yalen404.github.io/blog/</link>
+    <description>叶志汉的个人博客：大模型推理优化、算法竞赛与工程实践。</description>
+    <language>zh-CN</language>
+    <atom:link href="https://yalen404.github.io/blog/rss.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>Wed, 04 Nov 2026 14:25:10 GMT</lastBuildDate>
+    <item>
+      <title>用 200 行 Node 写一个静态博客</title>
+      <link>https://yalen404.github.io/blog/posts/build-a-blog/</link>
+      <guid isPermaLink="true">https://yalen404.github.io/blog/posts/build-a-blog/</guid>
+      <pubDate>Wed, 04 Nov 2026 01:30:00 GMT</pubDate>
+      <description>不装框架、不拉依赖：一个 Markdown 目录、一份模板、一个 build.mjs，就足够撑起一个写起来顺手的个人博客。记录这套站点的设计取舍。</description>
+      <category>前端</category>
+      <category>工程实践</category>
+      <category>静态站点</category>
+    </item>
+    <item>
+      <title>十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信</title>
+      <link>https://yalen404.github.io/blog/posts/moe/</link>
+      <guid isPermaLink="true">https://yalen404.github.io/blog/posts/moe/</guid>
+      <pubDate>Wed, 14 Oct 2026 02:00:00 GMT</pubDate>
+      <description>用 8 专家、Top-2 的最小例子，把 MoE 的路由机制、参数与计算量为什么能解耦、以及负载不均与跨设备通信两个代价讲清楚。附 7 张示意图。</description>
+      <category>大模型</category>
+      <category>MoE</category>
+      <category>模型架构</category>
+      <category>深度学习</category>
+    </item>
+    <item>
+      <title>大模型推理优化的五个方向</title>
+      <link>https://yalen404.github.io/blog/posts/inference-five-directions/</link>
+      <guid isPermaLink="true">https://yalen404.github.io/blog/posts/inference-five-directions/</guid>
+      <pubDate>Sun, 17 May 2026 16:40:00 GMT</pubDate>
+      <description>用一个一阶模型把 FlashAttention、投机解码、量化、PagedAttention 归到五个可调变量上：E、U、Acc、P_peak、F_token，并用它判断一个优化手段到底在改什么、是不是瓶颈、会把成本转移到哪里。</description>
+      <category>推理优化</category>
+      <category>大模型</category>
+      <category>性能分析</category>
+      <category>系统</category>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 626" width="1000" height="626" role="img" aria-labelledby="t4 t4d">
+  <title id="t4">多 token 的分发、并行计算与聚合</title>
+  <desc id="t4d">8 个 token 经 Top-2 分发到 8 位专家，各专家只处理被分到的 token，彼此互不依赖可并行。</desc>
+  <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7.5" refY="3" orient="auto"><path d="M0,0 L7.5,3 L0,6 z" fill="#94a3b8"/></marker></defs>
+  <text x="24" y="38" style="font:600 17px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">Top-2 之后：数据被分发给各位专家（负载并不相等）</text>
+  <text x="24" y="66" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">输入 token</text>
+  <rect x="24" y="78" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="96" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t0</text>
+  <rect x="24" y="108" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="126" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t1</text>
+  <rect x="24" y="138" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="156" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t2</text>
+  <rect x="24" y="168" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="186" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t3</text>
+  <rect x="24" y="198" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="216" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t4</text>
+  <rect x="24" y="228" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="246" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t5</text>
+  <rect x="24" y="258" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="276" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t6</text>
+  <rect x="24" y="288" width="62" height="25" rx="5" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/>
+  <text x="55" y="306" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle">t7</text>
+  <rect x="110" y="142" width="88" height="62" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="154" y="168" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" text-anchor="middle" fill="#1d4ed8">Router</text>
+  <text x="154" y="190" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" text-anchor="middle" fill="#2563eb">Top-2</text>
+  <rect x="240" y="84" width="340" height="84" rx="9" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.9"/>
+  <text x="256" y="110" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#6b21a8">Expert 1</text>
+  <text x="564" y="114" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#6b21a8">1 个</text>
+  <text x="256" y="136" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#6b21a8">t7</text>
+  <text x="256" y="158" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#a855f7">权重 0.881</text>
+  <rect x="240" y="178" width="340" height="84" rx="9" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="256" y="204" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#3730a3">Expert 2</text>
+  <text x="564" y="208" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#3730a3">6 个</text>
+  <text x="256" y="230" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">t0  t2  t3  t4  t6  t7</text>
+  <text x="256" y="252" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#6366f1">权重 0.881 / 0.119</text>
+  <rect x="240" y="272" width="340" height="84" rx="9" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.9"/>
+  <text x="256" y="298" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#1e40af">Expert 3</text>
+  <text x="564" y="302" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#1e40af">1 个</text>
+  <text x="256" y="324" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#1e40af">t5</text>
+  <text x="256" y="346" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#3b82f6">权重 0.119</text>
+  <rect x="240" y="366" width="340" height="84" rx="9" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.9"/>
+  <text x="256" y="392" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#115e59">Expert 4</text>
+  <text x="564" y="396" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#115e59">1 个</text>
+  <text x="256" y="418" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#115e59">t0</text>
+  <text x="256" y="440" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#14b8a6">权重 0.119</text>
+  <rect x="612" y="84" width="340" height="84" rx="9" fill="#dcfce7" stroke="#22c55e" stroke-width="1.9"/>
+  <text x="628" y="110" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#166534">Expert 5</text>
+  <text x="936" y="114" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#166534">2 个</text>
+  <text x="628" y="136" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#166534">t1  t4</text>
+  <text x="628" y="158" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#22c55e">权重 0.881</text>
+  <rect x="612" y="178" width="340" height="84" rx="9" fill="#fef9c3" stroke="#eab308" stroke-width="1.9"/>
+  <text x="628" y="204" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#854d0e">Expert 6</text>
+  <text x="936" y="208" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#854d0e">2 个</text>
+  <text x="628" y="230" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#854d0e">t3  t6</text>
+  <text x="628" y="252" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#eab308">权重 0.881 / 0.119</text>
+  <rect x="612" y="272" width="340" height="84" rx="9" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.9"/>
+  <text x="628" y="298" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#92400e">Expert 7</text>
+  <text x="936" y="302" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#92400e">2 个</text>
+  <text x="628" y="324" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#92400e">t1  t5</text>
+  <text x="628" y="346" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#f59e0b">权重 0.881 / 0.119</text>
+  <rect x="612" y="366" width="340" height="84" rx="9" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.9"/>
+  <text x="628" y="392" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#111827" fill="#9f1239">Expert 8</text>
+  <text x="936" y="396" style="font:700 15px Consolas,'SFMono-Regular',monospace" text-anchor="end" fill="#9f1239">1 个</text>
+  <text x="628" y="418" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#9f1239">t2</text>
+  <text x="628" y="440" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#f43f5e">权重 0.119</text>
+  <rect x="228" y="70" width="736" height="394" rx="12" fill="none" stroke="#c7d2fe" stroke-width="1.6" stroke-dasharray="6 5"/>
+  <text x="24" y="504" style="font:600 15px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">分发 dispatch</text>
+  <text x="200" y="504" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#4f46e5">Router 先决定每个 token 去哪些专家，数据再被送往对应设备。</text>
+  <text x="24" y="548" style="font:600 15px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">并行 parallel</text>
+  <text x="200" y="548" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#16a34a">八位专家之间没有任何依赖，可以同时计算 —— 这是 MoE 吞吐友好的来源。</text>
+  <text x="24" y="592" style="font:600 15px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">聚合 combine</text>
+  <text x="200" y="592" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280" fill="#d97706">各专家算完后，按该 token 的两个权重把结果相加，还原出各自的 h。</text>
+</svg>

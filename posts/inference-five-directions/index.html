@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-skin="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: dark)">
+<title>大模型推理优化的五个方向 · 叶志汉</title>
+<meta name="description" content="用一个一阶模型把 FlashAttention、投机解码、量化、PagedAttention 归到五个可调变量上：E、U、Acc、P_peak、F_token，并用它判断一个优化手段到底在改什么、是不是瓶颈、会把成本转移到哪里。">
+<meta name="author" content="叶志汉">
+<meta property="og:type" content="website">
+<meta property="og:title" content="大模型推理优化的五个方向 · 叶志汉">
+<meta property="og:description" content="用一个一阶模型把 FlashAttention、投机解码、量化、PagedAttention 归到五个可调变量上：E、U、Acc、P_peak、F_token，并用它判断一个优化手段到底在改什么、是不是瓶颈、会把成本转移到哪里。">
+<meta property="og:site_name" content="叶志汉">
+<meta property="og:url" content="https://yalen404.github.io/blog/posts/inference-five-directions/">
+<link rel="canonical" href="https://yalen404.github.io/blog/posts/inference-five-directions/">
+<link rel="alternate" type="application/rss+xml" title="叶志汉" href="/blog/rss.xml">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22%231c1a17%22%2F%3E%3Ctext%20x%3D%2216%22%20y%3D%2222%22%20font-family%3D%22serif%22%20font-size%3D%2218%22%20fill%3D%22%23f6f2ea%22%20text-anchor%3D%22middle%22%3E%E5%8F%B6%3C%2Ftext%3E%3C%2Fsvg%3E">
+<script>(function(){try{var qp=new URLSearchParams(location.search);var t=qp.get('theme')||localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var s=qp.get('skin');if(s&&["paper","minimal","terminal","aurora"].indexOf(s)>-1)document.documentElement.dataset.skin=s}catch(e){}})();</script>
+<link rel="stylesheet" href="/blog/assets/styles.css?v=c9c51339">
+<link rel="stylesheet" href="/blog/assets/skins.css?v=2ef315c1">
+<link rel="stylesheet" href="/blog/vendor/katex/katex.min.css">
+
+</head>
+<body class="page-post">
+<a class="skip" href="#main">跳到正文</a>
+<header class="site-head" data-head>
+  <div class="wrap head-inner">
+    <a class="brand" href="/blog/" aria-label="返回首页">
+      <span class="brand-mark">叶</span>
+      <span class="brand-text">叶志汉<em>Zhihan</em></span>
+    </a>
+    <nav class="nav" aria-label="主导航"><a href="/blog/" class="is-active" aria-current="page">文章</a><a href="/blog/archive/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></nav>
+    <div class="head-tools">
+      <button class="icon-btn" type="button" data-search aria-label="搜索文章（快捷键 /）" title="搜索标题、标签或正文…"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深浅色" title="切换深浅色">
+        <span class="when-light"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></span><span class="when-dark"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg></span>
+      </button>
+    </div>
+  </div>
+</header>
+<main id="main"><div class="reading-bar" data-progress></div>
+<article class="wrap post">
+  <header class="post-head">
+    <p class="post-kicker">
+      <time datetime="2026-05-17T16:40:00.000Z">2026 年 5 月 18 日</time>
+      <span class="dot">·</span><span>约 9 分钟</span>
+      <span class="dot">·</span><a href="/blog/tags/推理优化/">推理优化</a><span class="sep">/</span><a href="/blog/tags/大模型/">大模型</a><span class="sep">/</span><a href="/blog/tags/性能分析/">性能分析</a><span class="sep">/</span><a href="/blog/tags/系统/">系统</a>
+    </p>
+    <h1 class="post-title">大模型推理优化的五个方向</h1>
+    <p class="post-lead">用一个一阶模型把 FlashAttention、投机解码、量化、PagedAttention 归到五个可调变量上：E、U、Acc、P_peak、F_token，并用它判断一个优化手段到底在改什么、是不是瓶颈、会把成本转移到哪里。</p>
+  </header>
+  
+  <div class="post-layout">
+    <div class="prose" data-prose data-toc-source><h2 id="从-t-f-p-出发建立分析框架">从 T = F / P 出发：建立分析框架</h2>
+<p>当前主流大语言模型基于 Transformer 架构，推理分为 <strong>Prefill（预填充）</strong> 和 <strong>Decode（解码）</strong> 两个阶段。Prefill 一次性处理输入 token 并缓存 KV，Decode 逐个生成输出 token，每步做一次完整的前向传播。Decode 在长文本场景下占了推理总时间的大头，所以本文以 Decode 为分析对象（Prefill 思路类似，可以直接迁移）。</p>
+<p>计算系统里，性能优化归根结底优化的是<strong>时间</strong>：</p>
+<p><div class="math-display">$$时间 = \frac{计算量}{算力}$$</div></p>
+<p>LLM 推理以 batch 为单位组织计算，选单 batch 推理耗时作为基础指标：</p>
+<p><div class="math-display">$$T_{batch} = \frac{F_{batch}}{P_{eff}} = \frac{BS \cdot (1 + N_{draft}) \cdot F_{token}}{P_{peak} \cdot U \cdot E(BS, N_{draft}, L)}$$</div></p>
+<p>各变量定义：</p>
+<div class="table-wrap"><table><thead><tr><th>符号</th><th>含义</th><th>说明</th></tr></thead><tbody><tr><td><span class="math-inline">$T_{batch}$</span></td><td>单 batch 推理耗时</td><td>基础时间指标</td></tr><tr><td><span class="math-inline">$BS$</span></td><td>批大小（Batch Size）</td><td>单 batch 中的请求数</td></tr><tr><td><span class="math-inline">$N_{draft}$</span></td><td>投机推理 token 数</td><td>不开投机解码时为 0</td></tr><tr><td><span class="math-inline">$F_{token}$</span></td><td>单 token 等效计算成本</td><td>可近似理解为 FLOPs；包含低精度、稀疏、冗余计算等因素后的等效成本</td></tr><tr><td><span class="math-inline">$P_{peak}$</span></td><td>硬件峰值算力</td><td>单位：FLOPS</td></tr><tr><td><span class="math-inline">$U$</span></td><td>硬件利用率（时间维度）</td><td>范围 0~1</td></tr><tr><td><span class="math-inline">$E$</span></td><td>硬件利用效率（空间维度）</td><td>范围 0~1</td></tr><tr><td><span class="math-inline">$Acc$</span></td><td>投机接受率</td><td>范围 0~1，推导吞吐时引入</td></tr><tr><td><span class="math-inline">$L$</span></td><td>上下文长度</td><td>影响 Attention 访存、KV Cache 和算子形态</td></tr></tbody></table></div>
+<p>分子是一个 batch 的总计算量：batch 中的 token 数 <span class="math-inline">$BS \cdot (1 + N_{draft})$</span> 乘以单 token 等效计算成本 <span class="math-inline">$F_{token}$</span>。分母是硬件实际发挥出来的算力：峰值算力 <span class="math-inline">$P_{peak}$</span> 打个折扣，乘以利用率 <span class="math-inline">$U$</span>，再乘以利用效率 <span class="math-inline">$E$</span>。</p>
+<p>这里把 <span class="math-inline">$E$</span> 写成 <span class="math-inline">$E(BS, N_{draft}, L)$</span>，是为了强调一个关键点：<strong><span class="math-inline">$E$</span> 不是常数。</strong> batch size、投机 token 数、上下文长度、并行配置、kernel 实现都会改变算子形态和计算访存比。后文为了公式简洁，仍然记作 <span class="math-inline">$E$</span>。</p>
+<p>这个表达两个简化：没有单独展开 rejection sampler 的采样开销。公式中的 <span class="math-inline">$Acc$</span> 已经表达了投机 token 被拒时的有效输出折损：系统算了 <span class="math-inline">$BS \cdot (1 + N_{draft})$</span> 个候选 token，但只有其中 <span class="math-inline">$Acc$</span> 比例转化为输出。但是开启投机解码的情况下，的确会引入 rejection sampler 的采样开销。</p>
+<h2 id="u-和-e-的区别">U 和 E 的区别</h2>
+<p>这两个指标容易混，但看的维度不同。</p>
+<p><strong>硬件利用率 <span class="math-inline">$U$</span></strong> 从时间维度衡量计算核心是否在工作，定义为 <span class="math-inline">$U = T_{compute} / T_{total}$</span>。比如一个 batch 总耗时 100ms，其中 70ms 计算核心在跑，<span class="math-inline">$U = 70\%$</span>。剩下 30ms 花在通信、host 调度等开销上。</p>
+<p><strong>硬件利用效率 <span class="math-inline">$E$</span></strong> 从空间维度衡量计算核心有没有跑满，可以定义为 <span class="math-inline">$E = F_{batch} / (P_{peak} \cdot T_{compute})$</span>。现代 GPU/NPU 都是多核架构，如果算子形态、访存模式或并行粒度没法把所有计算单元打满，<span class="math-inline">$E$</span> 就小于 1。平时说的”算子优化”，优化的主要就是这个。</p>
+<p>一句话：<strong><span class="math-inline">$U$</span> 看”有没有在算”，<span class="math-inline">$E$</span> 看”算得好不好”</strong>。</p>
+<h2 id="推导吞吐与时延">推导吞吐与时延</h2>
+<p>有了 <span class="math-inline">$T_{batch}$</span>，接下来推两个业务指标：<strong>系统吞吐</strong>（决定成本）和<strong>用户时延</strong>（决定体验）。</p>
+<h2 id="系统吞吐">系统吞吐</h2>
+<p>系统吞吐 = 单 batch 输出的 token 数 / 单 batch 耗时。</p>
+<p>不开投机解码时，一个 batch 输出 <span class="math-inline">$BS$</span> 个 token。开了之后，最多输出 <span class="math-inline">$BS \cdot (1 + N_{draft})$</span> 个，乘以接受率 <span class="math-inline">$Acc$</span> 就是实际输出量：</p>
+<p><div class="math-display">$$TPS_{system} = \frac{BS \cdot (1 + N_{draft}) \cdot Acc}{T_{batch}} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{F_{token}}$$</div></p>
+<blockquote><p>这里的 <span class="math-inline">$Acc$</span> 是整体接受率，即单步实际输出 token 数与最大可能输出数 <span class="math-inline">$(1+N_{draft})$</span> 的比值，不是逐 token 的独立接受概率。用整体接受率是为了简化，不影响定性判断。</p></blockquote>
+<h2 id="用户时延">用户时延</h2>
+<p>用户体验一般用 TPOT（Time Per Output Token）衡量。转成吞吐形式就是单用户单位时间拿到多少 token：</p>
+<p><div class="math-display">$$TPS_{user} = \frac{(1 + N_{draft}) \cdot Acc}{T_{batch}} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{BS \cdot F_{token}}$$</div></p>
+<h2 id="batch-size-去哪了">Batch Size 去哪了？</h2>
+<p>把两个公式放一起看：</p>
+<p><div class="math-display">$$TPS_{system} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{F_{token}} \qquad TPS_{user} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{BS \cdot F_{token}}$$</div></p>
+<p>有两件事比较有意思。</p>
+<p><strong>系统吞吐里，BS 被消掉了。</strong> 理想情况下系统吞吐跟 batch size 无关：batch 越大算的 token 越多，耗时也等比增加，单位时间内输出 token 量应该不变。但实践中增大 BS 却能提高吞吐，这是为什么？因为 BS 增大提高了 <span class="math-inline">$E$</span>。更大的 batch 带来更高的计算访存比（Arithmetic Intensity），计算单元可以被更充分地利用，所以耗时没有完全线性增加。<span class="math-inline">$E$</span> 的提升才是吞吐提升的真正来源。</p>
+<p><strong>吞吐和时延的矛盾根源也在 BS。</strong> 系统吞吐没有 BS，用户 TPS 的分母有 BS。增大 BS 通过提升 <span class="math-inline">$E$</span> 提高了系统吞吐，但同时直接压低了单用户 TPS。服务提供者想把 BS 拉大降成本，用户想要 BS 小拿到更快响应。这就是计算系统里经典的吞吐-时延 trade-off。</p>
+<p>所以，公式里 BS 被消掉不代表 BS 不重要，而是说明 BS 的作用不在代数项本身，而在它对 <span class="math-inline">$E$</span> 的影响上。</p>
+<h2 id="五大优化方向">五大优化方向</h2>
+<p>回到系统吞吐公式：</p>
+<p><div class="math-display">$$TPS_{system} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{F_{token}}$$</div></p>
+<p>每个变量对应一个优化方向，变量的值域就是优化空间。下面是每个方向的部分优化思路和优化手段：</p>
+<figure><img src="https://pic1.zhimg.com/v2-e320577f1d1e5f56ce5b9483a59e1492_1440w.jpg" alt="image" loading="lazy" decoding="async"><figcaption>image</figcaption></figure>
+<div class="table-wrap"><table><thead><tr><th>变量</th><th>关键问题</th><th>典型优化手段</th><th>主要约束</th></tr></thead><tbody><tr><td><span class="math-inline">$E$</span></td><td>算子是否把计算单元打满</td><td>增大 BS、投机验证、FlashAttention、算子融合、KV/显存优化</td><td>显存、访存带宽、kernel 形态、用户时延</td></tr><tr><td><span class="math-inline">$U$</span></td><td>时间线上硬件是否持续在算</td><td>通信计算重叠、CUDAGraph、异步调度、PD 分离、负载均衡</td><td>调度复杂度、通信拓扑、负载长尾</td></tr><tr><td><span class="math-inline">$Acc$</span></td><td>投机 token 有多少被接受</td><td>更强 draft model、场景化 draft、tree-based speculation</td><td>rejection sampler 采样开销、数据分布、主模型验证成本</td></tr><tr><td><span class="math-inline">$P_{peak}$</span></td><td>是否用上硬件更快路径</td><td>FP8、INT8、硬件选型、并行配置</td><td>精度损失、硬件支持、算子覆盖率</td></tr><tr><td><span class="math-inline">$F_{token}$</span></td><td>单 token 等效成本是否降低</td><td>KV Cache、剪枝、稀疏化、低精度、结构优化</td><td>精度、模型质量、实现复杂度</td></tr></tbody></table></div>
+<h2 id="e硬件利用效率"><span class="math-inline">$E$</span>（硬件利用效率）</h2>
+<p><span class="math-inline">$E$</span> 往往是推理优化里最值得先看的方向，两条路：<strong>提高计算访存比</strong>和 <strong>Kernel 优化</strong>。</p>
+<p>提高计算访存比最直接的办法是加大 BS。但 BS 受限于显存容量，于是催生了一系列显存优化：KV Cache 量化降低缓存占用，权重分片在多卡间分摊显存。这些技术本质上都是为了撑起更大的 BS，从而拉高 <span class="math-inline">$E$</span>。</p>
+<p>另一个思路是投机解码：单 batch 多验证几个 token，扩大一次 forward 的有效工作量，提高计算访存比。但有个 trade-off：<strong>高并发场景下 BS 本身已经很大，<span class="math-inline">$E$</span> 已经比较高了，投机解码对 <span class="math-inline">$E$</span> 的边际提升有限，而吞吐还要乘一个小于 1 的 <span class="math-inline">$Acc$</span>，再叠加 rejection sampler 的采样开销，整体吞吐可能反降。</strong> 这个现象套进公式就能看明白原因。</p>
+<p>Kernel 优化是难度最高的方向。从算子内部出发，优化内存访问模式、计算并行度、数据局部性。FlashAttention 用 tiling 策略把 Attention 算子的 <span class="math-inline">$E$</span> 拉高了一大截，MoE 相关的算子融合减少了 Kernel 启动开销和中间数据搬运。Triton、TileLang 这些工具降低了编程界面的门槛，但写出高性能算子还是绕不开对线程块（Thread Block）、Warp、SIMT 这些硬件概念的理解。</p>
+<h2 id="u硬件利用率"><span class="math-inline">$U$</span>（硬件利用率）</h2>
+<p><span class="math-inline">$U$</span> 的目标是让计算核心尽量忙起来，减少空转。常见手段：</p>
+<ul><li><strong>通信计算重叠</strong>：分布式推理中把通信和计算流水化，避免串行等待</li><li><strong>图编译优化（CUDAGraph 等）</strong>：消除 Kernel Launch 和 Host 调度开销</li><li><strong>异步调度</strong>：调度、KV 传输等操作跟计算并行跑</li><li><strong>PD 分离</strong>：Prefill 和 Decode 分开部署，减少 prefill、decode batch 混跑的干扰</li><li><strong>DPLB、EPLB</strong>：均衡不同 DP rank 间在 Attention 和 MoE 阶段的负载，避免负载不均导致的快慢卡问题</li></ul>
+<p>vLLM、SGLang 等成熟推理引擎通常已经在 <span class="math-inline">$U$</span> 上投入了大量优化。判断当前部署服务是否还有空间，最直接的方法是跑 profiling trace：看时间线上计算窗口占总耗时多少，通信、Host 调度、同步等待、KV 传输分别占多少。</p>
+<p>如果 trace 上有大片非计算时间，优先优化 <span class="math-inline">$U$</span>；如果时间线已经很紧，但单个 kernel 的 achieved FLOPS 很低，问题就更可能在 <span class="math-inline">$E$</span>。</p>
+<h2 id="acc投机接受率"><span class="math-inline">$Acc$</span>（投机接受率）</h2>
+<p>投机解码的思路是用 draft model 预测多个候选 token，再让主模型一次性验证。<span class="math-inline">$Acc$</span> 直接决定了收益大小。</p>
+<p>关于投机解码我并不熟悉，也没有去训练过 draft model，了解到的优化手段可能有：用更强的 draft model 或针对目标场景微调；用 tree-based speculation 一次验证多条候选路径；根据任务类型动态选择 speculative depth。</p>
+<p>另外，<span class="math-inline">$Acc$</span> 跟数据分布强相关，代码、数学、闲聊、结构化输出的接受率可能完全不同，所以不能只用一个平均值判断所有业务。</p>
+<h2 id="ppeak-和-ftoken"><span class="math-inline">$P_{peak}$</span> 和 <span class="math-inline">$F_{token}$</span></h2>
+<p><span class="math-inline">$P_{peak}$</span> 在给定硬件下基本固定，但低精度格式可以让计算落到更快的硬件路径上。FP8、INT8 这类格式，本质上是在使用硬件提供的更高峰值路径，所以可以理解为提高有效 <span class="math-inline">$P_{peak}$</span>。同时，量化格式还会降低权重和 KV 的存储、访存压力，间接改善 <span class="math-inline">$E$</span>。</p>
+<p>严格按数学 FLOPs 计算，除非采用 SpargeAttn 等非训练稀疏注意力技术，通常一次 forward 的计算量并不会因为某些技术而降低，但是在实现某些研发时，却可能会引入冗余计算，相应地，可以研究优化技术，来降低冗余计算。举个例子，只开启 TP 可能会引入 rms norm 的冗余计算等，而 SP 就能够在不引入额外通信量的情况下将冗余计算消除掉。</p>
+<h2 id="如何用这个框架判断优化机会">如何用这个框架判断优化机会</h2>
+<p>拿到一个推理优化方案，可以按四个问题判断：</p>
+<ul><li>它主要改变哪个变量：<span class="math-inline">$E$</span>、<span class="math-inline">$U$</span>、<span class="math-inline">$Acc$</span>、<span class="math-inline">$P_{peak}$</span> 还是 <span class="math-inline">$F_{token}$</span>？</li><li>这个变量当前是不是瓶颈：trace、achieved FLOPS、显存占用、acceptance rate 能否证明？</li><li>它牺牲了哪个变量：例如增大 BS 牺牲用户 TPS，投机解码承受 <span class="math-inline">$Acc$</span> 折损和 rejection sampler 采样开销，量化牺牲精度或算子覆盖率？</li><li>它适合哪个场景：高并发在线、低延迟在线、长上下文、离线吞吐、Prefill-heavy 还是 Decode-heavy？</li></ul>
+<p>这四个问题能避免把所有优化手段混成”提性能”。更准确的表达应该是：某个手段在某个场景下，通过改变某个变量，换取了某个指标的收益。</p>
+<h2 id="总结">总结</h2>
+<p>本文从 <span class="math-inline">$T = F / P$</span> 出发，LLM 推理优化可以拆成五个方向：<span class="math-inline">$E$</span>、<span class="math-inline">$U$</span>、<span class="math-inline">$Acc$</span>、<span class="math-inline">$P_{peak}$</span>、<span class="math-inline">$F_{token}$</span>。其中 <span class="math-inline">$P_{peak}$</span> 和 <span class="math-inline">$F_{token}$</span> 空间有限，<span class="math-inline">$U$</span> 在主流场景下逐渐见顶，<strong><span class="math-inline">$E$</span> 和 <span class="math-inline">$Acc$</span> 可能是当前回报最高的方向</strong>。</p>
+<p>不过，本文无法给出一个量化的理论性能上限。原因在于，一个 batch 中通常包含多个算子，而不同算子的 <span class="math-inline">$E$</span> 各不相同；<span class="math-inline">$U$</span> 和 <span class="math-inline">$E$</span> 还会随 batch size、上下文长度、并行配置、请求分布动态变化，因此整体性能很难被一个静态公式精确刻画。</p>
+<p>本文更希望提供一个分析框架：在开展推理优化时，先判断瓶颈落在哪个变量，再评估该变量的剩余空间和副作用。这样才能把经验性的优化动作，转化成可解释、可比较、可复用的性能判断。</p>
+<hr>
+<blockquote><p>本文首发于知乎专栏「非标编程」：<a href="https://zhuanlan.zhihu.com/p/2039619911031449068" target="_blank" rel="noopener">原文链接</a>。</p></blockquote></div>
+    <aside class="toc" data-toc><p class="toc-title">本文目录</p><ul><li class="lvl-2"><a href="#undefined从-t-f-p-出发建立分析框架">从 T = F / P 出发：建立分析框架</a></li><li class="lvl-2"><a href="#undefinedu-和-e-的区别">U 和 E 的区别</a></li><li class="lvl-2"><a href="#undefined推导吞吐与时延">推导吞吐与时延</a></li><li class="lvl-2"><a href="#undefined系统吞吐">系统吞吐</a></li><li class="lvl-2"><a href="#undefined用户时延">用户时延</a></li><li class="lvl-2"><a href="#undefinedbatch-size-去哪了">Batch Size 去哪了？</a></li><li class="lvl-2"><a href="#undefined五大优化方向">五大优化方向</a></li><li class="lvl-2"><a href="#undefinede硬件利用效率">$E$（硬件利用效率）</a></li><li class="lvl-2"><a href="#undefinedu硬件利用率">$U$（硬件利用率）</a></li><li class="lvl-2"><a href="#undefinedacc投机接受率">$Acc$（投机接受率）</a></li><li class="lvl-2"><a href="#undefinedppeak-和-ftoken">$P_{peak}$ 和 $F_{token}$</a></li><li class="lvl-2"><a href="#undefined如何用这个框架判断优化机会">如何用这个框架判断优化机会</a></li><li class="lvl-2"><a href="#undefined总结">总结</a></li></ul></aside>
+  </div>
+  <footer class="post-foot">
+    <div class="post-tags"><a class="tag" href="/blog/tags/推理优化/">推理优化</a><a class="tag" href="/blog/tags/大模型/">大模型</a><a class="tag" href="/blog/tags/性能分析/">性能分析</a><a class="tag" href="/blog/tags/系统/">系统</a></div>
+    <nav class="post-nav">
+      <span></span>
+      <a class="nav-next" href="/blog/posts/moe/"><span>下一篇 →</span><strong>十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信</strong></a>
+    </nav>
+  </footer>
+</article></main>
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <div class="foot-left">
+      <p class="foot-sign">© 2026 叶志汉</p>
+      <p class="foot-note">纯手工静态站 · 由 200 行 Node 脚本从 Markdown 生成</p>
+    </div>
+    <div class="foot-links">
+      <a href="/blog/rss.xml"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 19a1 1 0 1 0 0-.01"/><path d="M5 13a6 6 0 0 1 6 6M5 7a12 12 0 0 1 12 12"/></svg>RSS</a>
+      
+      <a href="https://github.com/yaLen404" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+<div class="palette" data-palette data-index="/blog/search.json" hidden>
+  <div class="palette-backdrop" data-palette-close></div>
+  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="搜索文章">
+    <div class="palette-input">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input type="search" data-palette-input placeholder="搜索标题、标签或正文…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="palette-list" data-palette-list></ul>
+    <p class="palette-empty" data-palette-empty hidden>没有找到相关文章</p>
+    <div class="palette-foot"><span>↑ ↓ 选择</span><span>↵ 打开</span><span>Esc 关闭</span></div>
+  </div>
+</div>
+<script src="/blog/assets/app.js?v=9e8635b6" defer></script>
+<script src="/blog/vendor/katex/katex.min.js" defer></script>
+<script src="/blog/vendor/katex/auto-render.min.js" defer></script>
+<script src="/blog/assets/math.js" defer></script>
+</body>
+</html>

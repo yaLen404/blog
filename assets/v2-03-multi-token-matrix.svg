@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 722" width="1000" height="722" role="img" aria-labelledby="t3 t3d">
+  <title id="t3">多 token 的打分、选择与权重（8 token × 8 专家）</title>
+  <desc id="t3d">8 个 token 对 8 位专家的得分矩阵，每行选出得分最高的两位并做 Softmax 归一化，权重恒为 0.881 与 0.119。</desc>
+  <text x="24" y="38" style="font:600 17px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">① 得分矩阵 S：每行 = 一个 token 对 8 位专家的打分</text>
+  <text x="229.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#6b21a8">E1</text>
+  <text x="313.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#3730a3">E2</text>
+  <text x="397.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#1e40af">E3</text>
+  <text x="481.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#115e59">E4</text>
+  <text x="565.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#166534">E5</text>
+  <text x="649.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#854d0e">E6</text>
+  <text x="733.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#92400e">E7</text>
+  <text x="817.0" y="72" style="font:600 12px Consolas,'SFMono-Regular',monospace" text-anchor="middle" fill="#9f1239">E8</text>
+  <text x="174" y="101" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t0</text>
+  <rect x="190" y="82" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="274" y="82" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">5.0</text>
+  <rect x="358" y="82" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="442" y="82" width="78" height="26" rx="5" fill="#ccfbf1" stroke="#14b8a6" stroke-width="1.9"/>
+  <text x="481.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#115e59">3.0</text>
+  <rect x="526" y="82" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="610" y="82" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="694" y="82" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="778" y="82" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="100" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <text x="174" y="131" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t1</text>
+  <rect x="190" y="112" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="274" y="112" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="313.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="358" y="112" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="442" y="112" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="526" y="112" width="78" height="26" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.9"/>
+  <text x="565.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#166534">5.0</text>
+  <rect x="610" y="112" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="694" y="112" width="78" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.9"/>
+  <text x="733.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#92400e">3.0</text>
+  <rect x="778" y="112" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="130" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <text x="174" y="161" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t2</text>
+  <rect x="190" y="142" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="274" y="142" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">5.0</text>
+  <rect x="358" y="142" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="442" y="142" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="526" y="142" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="610" y="142" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="694" y="142" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="778" y="142" width="78" height="26" rx="5" fill="#ffe4e6" stroke="#f43f5e" stroke-width="1.9"/>
+  <text x="817.0" y="160" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#9f1239">3.0</text>
+  <text x="174" y="191" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t3</text>
+  <rect x="190" y="172" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="274" y="172" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">3.0</text>
+  <rect x="358" y="172" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="442" y="172" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="526" y="172" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="610" y="172" width="78" height="26" rx="5" fill="#fef9c3" stroke="#eab308" stroke-width="1.9"/>
+  <text x="649.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#854d0e">5.0</text>
+  <rect x="694" y="172" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="778" y="172" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="190" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <text x="174" y="221" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t4</text>
+  <rect x="190" y="202" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="274" y="202" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">3.0</text>
+  <rect x="358" y="202" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="442" y="202" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="526" y="202" width="78" height="26" rx="5" fill="#dcfce7" stroke="#22c55e" stroke-width="1.9"/>
+  <text x="565.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#166534">5.0</text>
+  <rect x="610" y="202" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="694" y="202" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="778" y="202" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="220" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <text x="174" y="251" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t5</text>
+  <rect x="190" y="232" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="274" y="232" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="313.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="358" y="232" width="78" height="26" rx="5" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.9"/>
+  <text x="397.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#1e40af">3.0</text>
+  <rect x="442" y="232" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="526" y="232" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="610" y="232" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="694" y="232" width="78" height="26" rx="5" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.9"/>
+  <text x="733.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#92400e">5.0</text>
+  <rect x="778" y="232" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="250" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <text x="174" y="281" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t6</text>
+  <rect x="190" y="262" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="229.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="274" y="262" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">5.0</text>
+  <rect x="358" y="262" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="442" y="262" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="526" y="262" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="610" y="262" width="78" height="26" rx="5" fill="#fef9c3" stroke="#eab308" stroke-width="1.9"/>
+  <text x="649.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#854d0e">3.0</text>
+  <rect x="694" y="262" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="778" y="262" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="280" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <text x="174" y="311" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="end">t7</text>
+  <rect x="190" y="292" width="78" height="26" rx="5" fill="#f3e8ff" stroke="#a855f7" stroke-width="1.9"/>
+  <text x="229.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#6b21a8">5.0</text>
+  <rect x="274" y="292" width="78" height="26" rx="5" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.9"/>
+  <text x="313.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#3730a3">3.0</text>
+  <rect x="358" y="292" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="397.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="442" y="292" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="481.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="526" y="292" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="565.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="610" y="292" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="649.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <rect x="694" y="292" width="78" height="26" rx="5" fill="#eef2f6" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="733.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#94a3b8">2.0</text>
+  <rect x="778" y="292" width="78" height="26" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.1"/>
+  <text x="817.0" y="310" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" text-anchor="middle" fill="#cbd5e1">0</text>
+  <text x="24" y="366" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">粗框 = 该行最高的两位（Top-2 选中）；浅灰 = 有分但落选；白格 = 0</text>
+  <text x="24" y="406" style="font:600 15px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#1f2937">② 每个 token 的权重（Softmax 后）</text>
+  <text x="40" y="436" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t0</text>
+  <text x="96" y="436" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.881</text>
+  <text x="238" y="436" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#115e59">E4 × 0.119</text>
+  <text x="40" y="460" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t1</text>
+  <text x="96" y="460" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#166534">E5 × 0.881</text>
+  <text x="238" y="460" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#92400e">E7 × 0.119</text>
+  <text x="40" y="484" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t2</text>
+  <text x="96" y="484" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.881</text>
+  <text x="238" y="484" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#9f1239">E8 × 0.119</text>
+  <text x="40" y="508" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t3</text>
+  <text x="96" y="508" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#854d0e">E6 × 0.881</text>
+  <text x="238" y="508" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.119</text>
+  <text x="40" y="532" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t4</text>
+  <text x="96" y="532" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#166534">E5 × 0.881</text>
+  <text x="238" y="532" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.119</text>
+  <text x="40" y="556" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t5</text>
+  <text x="96" y="556" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#92400e">E7 × 0.881</text>
+  <text x="238" y="556" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#1e40af">E3 × 0.119</text>
+  <text x="40" y="580" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t6</text>
+  <text x="96" y="580" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.881</text>
+  <text x="238" y="580" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#854d0e">E6 × 0.119</text>
+  <text x="40" y="604" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827">t7</text>
+  <text x="96" y="604" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#6b21a8">E1 × 0.881</text>
+  <text x="238" y="604" style="font:600 12.5px Consolas,'SFMono-Regular',monospace;fill:#111827" fill="#3730a3">E2 × 0.119</text>
+  <text x="420" y="436" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">→ 按此权重把两位专家的输出相加</text>
+  <text x="420" y="462" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">每行都是 5 分与 3 分之争，</text>
+  <text x="420" y="488" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">因此权重恒为 0.881 / 0.119。</text>
+  <rect x="24" y="630" width="952" height="62" rx="10" fill="#eef2ff" stroke="#6366f1" stroke-width="1.6"/>
+  <text x="44" y="656" style="font:600 13.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif" fill="#3730a3">8 个 token 各选 2 位专家 = 16 个槽位，却集中到 Expert 2 身上 6 个。</text>
+  <text x="44" y="680" style="font:12.5px 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;fill:#6b7280">分发之后各专家互不依赖，可完全并行；算完再按权重聚合回每个 token。</text>
+</svg>

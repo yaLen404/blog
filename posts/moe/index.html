@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light" data-skin="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#070b09" media="(prefers-color-scheme: dark)">
+<title>十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信 · 叶志汉</title>
+<meta name="description" content="用 8 专家、Top-2 的最小例子，把 MoE 的路由机制、参数与计算量为什么能解耦、以及负载不均与跨设备通信两个代价讲清楚。附 7 张示意图。">
+<meta name="author" content="叶志汉">
+<meta property="og:type" content="website">
+<meta property="og:title" content="十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信 · 叶志汉">
+<meta property="og:description" content="用 8 专家、Top-2 的最小例子，把 MoE 的路由机制、参数与计算量为什么能解耦、以及负载不均与跨设备通信两个代价讲清楚。附 7 张示意图。">
+<meta property="og:site_name" content="叶志汉">
+<meta property="og:url" content="https://yalen404.github.io/blog/posts/moe/">
+<link rel="canonical" href="https://yalen404.github.io/blog/posts/moe/">
+<link rel="alternate" type="application/rss+xml" title="叶志汉" href="/blog/rss.xml">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Crect%20width%3D%2232%22%20height%3D%2232%22%20rx%3D%228%22%20fill%3D%22%231c1a17%22%2F%3E%3Ctext%20x%3D%2216%22%20y%3D%2222%22%20font-family%3D%22serif%22%20font-size%3D%2218%22%20fill%3D%22%23f6f2ea%22%20text-anchor%3D%22middle%22%3E%E5%8F%B6%3C%2Ftext%3E%3C%2Fsvg%3E">
+<script>(function(){try{var qp=new URLSearchParams(location.search);var t=qp.get('theme')||localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var s=qp.get('skin');if(s&&["paper","minimal","terminal","aurora"].indexOf(s)>-1)document.documentElement.dataset.skin=s}catch(e){}})();</script>
+<link rel="stylesheet" href="/blog/assets/styles.css?v=c9c51339">
+<link rel="stylesheet" href="/blog/assets/skins.css?v=2ef315c1">
+
+
+</head>
+<body class="page-post">
+<a class="skip" href="#main">跳到正文</a>
+<header class="site-head" data-head>
+  <div class="wrap head-inner">
+    <a class="brand" href="/blog/" aria-label="返回首页">
+      <span class="brand-mark">叶</span>
+      <span class="brand-text">叶志汉<em>Zhihan</em></span>
+    </a>
+    <nav class="nav" aria-label="主导航"><a href="/blog/" class="is-active" aria-current="page">文章</a><a href="/blog/archive/">归档</a><a href="/blog/tags/">标签</a><a href="/blog/about/">关于</a></nav>
+    <div class="head-tools">
+      <button class="icon-btn" type="button" data-search aria-label="搜索文章（快捷键 /）" title="搜索标题、标签或正文…"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg></button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深浅色" title="切换深浅色">
+        <span class="when-light"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/></svg></span><span class="when-dark"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M19 5l-1.5 1.5M6.5 17.5 5 19"/></svg></span>
+      </button>
+    </div>
+  </div>
+</header>
+<main id="main"><div class="reading-bar" data-progress></div>
+<article class="wrap post">
+  <header class="post-head">
+    <p class="post-kicker">
+      <time datetime="2026-10-14T02:00:00.000Z">2026 年 10 月 14 日</time>
+      <span class="dot">·</span><span>约 6 分钟</span>
+      <span class="dot">·</span><a href="/blog/tags/大模型/">大模型</a><span class="sep">/</span><a href="/blog/tags/moe/">MoE</a><span class="sep">/</span><a href="/blog/tags/模型架构/">模型架构</a><span class="sep">/</span><a href="/blog/tags/深度学习/">深度学习</a>
+    </p>
+    <h1 class="post-title">十分钟看懂 MoE（混合专家模型）：从 FFN 到路由、负载均衡与跨设备通信</h1>
+    <p class="post-lead">用 8 专家、Top-2 的最小例子，把 MoE 的路由机制、参数与计算量为什么能解耦、以及负载不均与跨设备通信两个代价讲清楚。附 7 张示意图。</p>
+  </header>
+  <figure class="post-cover"><img src="/blog/assets/v2-01-ffn-to-experts.svg" alt="" loading="eager" decoding="async"></figure>
+  <div class="post-layout">
+    <div class="prose" data-prose data-toc-source><blockquote><p>MoE（Mixture of Experts，混合专家模型）听起来很唬人，但它的出发点只有一句话：<strong>把一个很大的 FFN 拆成很多小份，每次只让其中一部分上场。</strong></p>
+<p>这篇文章用一个「8 个专家 + Top-2」的最小例子，把 MoE 的路由机制、参数量与计算量为什么能解耦、以及它的两个典型代价讲清楚。</p></blockquote>
+<h2 id="一一句话概括">一、一句话概括</h2>
+<blockquote><p><strong>把一个参数量很大的 FFN 拆成许多小份（每个小份叫一个「专家」），每次运行时只挑中其中一部分专家参与计算。</strong></p></blockquote>
+<p>这样一来，模型的总参数可以做得很大（能力上限更高），但每个 token 实际激活的参数（计算量）仍然可控。</p>
+<hr>
+<h2 id="二为什么从-ffn-开始讲">二、为什么从 FFN 开始讲？</h2>
+<p>MoE 的改造对象是 Transformer 块里的 FFN：</p>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code>Transformer Block = Attention + FFN</code></pre></div>
+<ul><li><strong>Attention</strong> 负责 token 之间的信息交互；</li><li><strong>FFN</strong>（前馈网络）负责把 Attention 的输出转换成这一层最终的隐状态。</li></ul>
+<p>MoE 的改造思路非常朴素：</p>
+<ol><li>把一个完整的 FFN「分」成若干份，比如分成 8 份；</li><li>每一份都称为一个<strong>专家（Expert）</strong>，于是就有了 Expert 1 ~ Expert 8；</li><li>再在它们前面加一个 <strong>Router（路由 / 门控网络）</strong>，由它决定每个 token 该交给哪些专家。</li></ol>
+<p><strong>关键点：专家在结构上就是 FFN</strong>，它们之间没有本质区别，区别只在于训练中各自学到的擅长方向不同。</p>
+<figure><img src="/blog/assets/v2-01-ffn-to-experts.svg" alt="从稠密 FFN 到 MoE：一份拆成八个专家，共用一个 Router" loading="lazy" decoding="async"><figcaption>从稠密 FFN 到 MoE：一份拆成八个专家，共用一个 Router</figcaption></figure>
+<hr>
+<h2 id="三moe-的基本计算流程单个-token">三、MoE 的基本计算流程（单个 Token）</h2>
+<p>以输入 token <code>t0</code> 为例，本例中专家数为 8、<code>k = 2</code>。</p>
+<h3 id="1-router-打分">1. Router 打分</h3>
+<p>用一个参数矩阵 <code>Wr</code> 与 <code>t0</code> 做运算，得到一个 <code>1 × 8</code> 的得分向量 <code>O</code>：</p>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code>       E1   E2   E3   E4   E5   E6   E7   E8
+O   = [ 1    4    2    5    0    3    2    1 ]</code></pre></div>
+<p>每个格子代表 <code>t0</code> 对该专家的「匹配度」得分。</p>
+<h3 id="2-top-k-选择">2. Top-k 选择</h3>
+<p>取分数最高的 <code>k</code> 个专家。这里 <code>k = 2</code>，得分最高的是 <strong>E4（5 分）</strong> 与 <strong>E2（4 分）</strong>，因此 <code>t0</code> 被路由到 <strong>Expert 4 和 Expert 2</strong>。其余 6 位本轮完全不参与。</p>
+<h3 id="3-softmax-求权重">3. Softmax 求权重</h3>
+<p>对选中的这 2 个分数做 Softmax，得到归一化的权重：</p>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code>E4 = exp(5) / (exp(5) + exp(4)) ≈ 0.731
+E2 = exp(4) / (exp(5) + exp(4)) ≈ 0.269</code></pre></div>
+<p>未选中的专家权重为 0，两者之和恒为 1。</p>
+<h3 id="4-专家计算-加权求和">4. 专家计算 + 加权求和</h3>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code>                              ┌─→ Expert 4 (FFN) ─→ out₄ ─× 0.731 ─┐
+t₀ ─→ Router ─→ Top-2 ────────┤                                     ├─→ Σ ─→ h₀
+                              └─→ Expert 2 (FFN) ─→ out₂ ─× 0.269 ─┘</code></pre></div>
+<p>两个专家的输出分别乘以各自权重，再相加，就得到 <code>t0</code> 在这一层的最终输出 <code>h₀</code>。</p>
+<figure><img src="/blog/assets/v2-02-single-token-flow.svg" alt="单个 token 的完整路由流程：打分 → Top-2 → Softmax → 加权求和" loading="lazy" decoding="async"><figcaption>单个 token 的完整路由流程：打分 → Top-2 → Softmax → 加权求和</figcaption></figure>
+<h3 id="5-流程小结">5. 流程小结</h3>
+<div class="code-block" data-lang="text"><button class="copy-btn" type="button" aria-label="复制" data-label="复制" data-done="已复制">复制</button><pre><code>Router → Top-k → 选中的 FFN 做运算 → 结果加权后相加 → h</code></pre></div>
+<p>这就是 MoE 最基本的计算逻辑。</p>
+<hr>
+<h2 id="四扩展到多个-token从向量到矩阵">四、扩展到多个 Token：从向量到矩阵</h2>
+<p>当一次输入有多个 token（记为 <code>t₀ … t₇</code>）时，流程完全一致，只是所有张量都升了一维：得分从 <code>1 × 8</code> 的向量变成 <code>8 × 8</code> 的矩阵，<strong>每一行对应一个 token 对 8 位专家的打分</strong>。</p>
+<p>对每一行各自做 Top-2 选择，再对选中的两个分数做 Softmax，就得到该 token 的权重。本例的完整结果如下：</p>
+<div class="table-wrap"><table><thead><tr><th>Token</th><th>得分最高的两位</th><th>权重</th></tr></thead><tbody><tr><td>t₀</td><td>E2（5）、E4（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₁</td><td>E5（5）、E7（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₂</td><td>E2（5）、E8（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₃</td><td>E6（5）、E2（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₄</td><td>E5（5）、E2（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₅</td><td>E7（5）、E3（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₆</td><td>E2（5）、E6（3）</td><td>0.881 / 0.119</td></tr><tr><td>t₇</td><td>E1（5）、E2（3）</td><td>0.881 / 0.119</td></tr></tbody></table></div>
+<p>本例把每行的最高分与次高分都设为 5 与 3，所以权重恒为 <strong>0.881 / 0.119</strong>；这也便于观察后面那个「负载不均」的问题。</p>
+<p><strong>分发之后，各专家之间可以完全并行计算。</strong> 算完后按同样的方式把每个 token 的结果加权合并，得到这一层的最终输出 <code>H</code>。</p>
+<figure><img src="/blog/assets/v2-03-multi-token-matrix.svg" alt="多 token 的打分矩阵、Top-2 选择与权重" loading="lazy" decoding="async"><figcaption>多 token 的打分矩阵、Top-2 选择与权重</figcaption></figure>
+<figure><img src="/blog/assets/v2-04-dispatch-aggregate.svg" alt="分发 → 八位专家并行计算 → 按权重聚合回每个 token" loading="lazy" decoding="async"><figcaption>分发 → 八位专家并行计算 → 按权重聚合回每个 token</figcaption></figure>
+<p>这就是多个 token 时的处理过程，也是 MoE 能提高吞吐的原因：<strong>专家维度天然可并行</strong>。</p>
+<hr>
+<h2 id="五moe-的优点参数量与计算量解耦">五、MoE 的优点：参数量与计算量解耦</h2>
+<p>用一组具体数字对比一下。</p>
+<div class="table-wrap"><table><thead><tr><th></th><th>稠密 FFN</th><th>MoE（8 专家，k=2）</th></tr></thead><tbody><tr><td>结构</td><td>单个 FFN</td><td>8 个专家，各 200M</td></tr><tr><td><strong>FFN 总参数</strong></td><td><strong>1600M</strong></td><td><strong>1600M</strong></td></tr><tr><td><strong>激活参数 / token</strong></td><td><strong>1600M</strong></td><td><strong>400M</strong></td></tr><tr><td>每个 token 的计算</td><td>全部参数参与</td><td>只激活 2 位专家</td></tr></tbody></table></div>
+<figure><img src="/blog/assets/v2-05-params-dense-vs-moe.svg" alt="总参数保持 1600M，每 token 只激活 400M" loading="lazy" decoding="async"><figcaption>总参数保持 1600M，每 token 只激活 400M</figcaption></figure>
+<p>结论：</p>
+<ul><li>MoE 的<strong>总参数与稠密版持平</strong>（都是 1600M），模型容量没有缩水；</li><li>但每个 token 的<strong>激活参数只有 400M，仅为总量的 25%</strong>，因为只有 2 位专家被选中；</li><li>于是同时拿到两边的优点：<strong>模型容量按稠密版对齐，而单 token 的算力开销接近一个小模型</strong>。</li></ul>
+<blockquote><p>这里只用了 8 位专家差距就已经很明显。<strong>实际应用中动辄几十到几百位专家，总参数与激活参数之间的鸿沟会更加夸张，MoE 的收益也就更加突出。</strong></p></blockquote>
+<hr>
+<h2 id="六moe-的两个典型缺点">六、MoE 的两个典型缺点</h2>
+<h3 id="缺点-1负载不均load-imbalance">缺点 1：负载不均（Load Imbalance）</h3>
+<p>还是 8 位专家、8 个 token、<code>k = 2</code>，把上面的分发结果按专家统计一下：</p>
+<div class="table-wrap"><table><thead><tr><th>专家</th><th>收到的 token</th><th>数量</th></tr></thead><tbody><tr><td>Expert 1</td><td>t₇</td><td>1</td></tr><tr><td>Expert 2</td><td>t₀ t₂ t₃ t₄ t₆ t₇</td><td><strong>6</strong></td></tr><tr><td>Expert 3</td><td>t₅</td><td>1</td></tr><tr><td>Expert 4</td><td>t₀</td><td>1</td></tr><tr><td>Expert 5</td><td>t₁ t₄</td><td>2</td></tr><tr><td>Expert 6</td><td>t₃ t₆</td><td>2</td></tr><tr><td>Expert 7</td><td>t₁ t₅</td><td>2</td></tr><tr><td>Expert 8</td><td>t₂</td><td>1</td></tr></tbody></table></div>
+<p>8 个 token、<code>k = 2</code>，一共只有 <strong>16 个「专家槽位」</strong>，却分成了 <strong>6 / 2 / 2 / 2 / 1 / 1 / 1 / 1</strong>：Expert 2 一个吃掉 6 个，而 Expert 1、3、4、8 各自只被点到一次，极差达到 5。</p>
+<p>后果是双向的：</p>
+<ul><li><strong>训练时</strong>：冷门专家很少被选中 → 拿不到足够梯度 → <strong>欠训练</strong>；</li><li><strong>推理时</strong>：总是那几位在干活，其余大量闲置 → <strong>参数被浪费</strong>。</li></ul>
+<p>所以，<strong>想让 MoE 真正发挥优点，就必须解决负载不均衡问题。</strong></p>
+<figure><img src="/blog/assets/v2-06-load-imbalance.svg" alt="8 个 token 的分布是 6 / 2 / 2 / 2 / 1 / 1 / 1 / 1" loading="lazy" decoding="async"><figcaption>8 个 token 的分布是 6 / 2 / 2 / 2 / 1 / 1 / 1 / 1</figcaption></figure>
+<h3 id="缺点-2跨设备通信复杂度">缺点 2：跨设备通信复杂度</h3>
+<p>MoE 的专家通常不会全放在一张卡上，而是要<strong>分布到不同 GPU</strong> 上。就以 8 位专家分到 4 张卡为例：</p>
+<div class="table-wrap"><table><thead><tr><th>设备</th><th>专家</th><th>处理 token 数</th></tr></thead><tbody><tr><td>GPU 1</td><td>Expert 1、Expert 2</td><td><strong>8</strong>（全部）</td></tr><tr><td>GPU 2</td><td>Expert 3、Expert 4</td><td>2</td></tr><tr><td>GPU 3</td><td>Expert 5、Expert 6</td><td>4</td></tr><tr><td>GPU 4</td><td>Expert 7、Expert 8</td><td>3</td></tr></tbody></table></div>
+<p>一旦专家分散在多卡上：</p>
+<ol><li>token 被路由到不同 GPU → <strong>设备之间需要通信</strong>（分发 / All-to-All）；</li><li>专家算完之后 → <strong>还要把结果跨设备重新聚合</strong>回来。</li></ol>
+<figure><img src="/blog/assets/v2-07-cross-device.svg" alt="专家分散在多卡上：分发、热点卡与结果聚合" loading="lazy" decoding="async"><figcaption>专家分散在多卡上：分发、热点卡与结果聚合</figcaption></figure>
+<p>于是两个问题会叠在一起：</p>
+<ul><li><strong>通信量随被选中的专家数增长</strong>，专家越多、切分越细，跨卡往返越频繁；</li><li><strong>负载不均会被多卡进一步放大</strong> —— GPU 1 承载了 Expert 1 与 Expert 2，要处理全部 8 个 token，成为瓶颈，而其他卡在等它，整体吞吐被最慢的一张卡拖住。</li></ul>
+<p><strong>如何设计一套高效的调度与通信算法，把这些设备充分利用起来，是 MoE 落地时最难的工程问题之一。</strong></p>
+<hr>
+<h2 id="七总结">七、总结</h2>
+<p><strong>核心思想</strong></p>
+<blockquote><p>把一个参数量很大的 FFN 拆成许多小份，每次运行只选中的部分专家去运行。</p></blockquote>
+<p><strong>收益</strong></p>
+<ul><li>模型容量可以按稠密版对齐（本例总参数 1600M）；</li><li>同时把激活参数压到 25%（本例 400M），<strong>计算量不随总参数膨胀</strong>；</li><li>专家可并行，吞吐友好。</li></ul>
+<p><strong>代价</strong></p>
+<ul><li>需要解决<strong>专家之间的负载不均衡</strong>；</li><li>专家变多后，<strong>专家之间相互通信的复杂度</strong>显著上升。</li></ul>
+<hr>
+<h2 id="八下一步">八、下一步</h2>
+<p>负载均衡与通信开销是 MoE 绕不开的两道坎，也是所有 MoE 大模型工程实现的核心议题。接下来值得深入看的是 <strong>DeepSeek 系列是如何处理这两个问题的</strong>——包括它的专家粒度设计、偏置式负载均衡策略，以及通信与计算的重叠。</p>
+<hr>
+<h2 id="附本章数据一览">附：本章数据一览</h2>
+<div class="table-wrap"><table><thead><tr><th>项目</th><th>取值</th></tr></thead><tbody><tr><td>专家数</td><td>8</td></tr><tr><td>Top-k</td><td>2</td></tr><tr><td>单个专家参数</td><td>200M</td></tr><tr><td>FFN 总参数</td><td>1600M</td></tr><tr><td>激活参数 / token</td><td>400M（25%）</td></tr><tr><td>单 token 例子的得分</td><td>E1=1 E2=4 E3=2 E4=5 E5=0 E6=3 E7=2 E8=1</td></tr><tr><td>单 token 选中的专家</td><td>Expert 4（0.731）、Expert 2（0.269）</td></tr><tr><td>多 token 场景</td><td>8 个 token，16 个专家槽位</td></tr><tr><td>每行权重</td><td>恒为 0.881 / 0.119</td></tr><tr><td>负载分布</td><td>6 / 2 / 2 / 2 / 1 / 1 / 1 / 1</td></tr><tr><td>跨设备方案</td><td>8 位专家 / 4 张 GPU，每卡 2 位</td></tr></tbody></table></div>
+<h2 id="说明">说明</h2>
+<ul><li>文中的得分、权重与参数量均为<strong>便于演示而设定的示例数据</strong>，Softmax 权重按所选分数实算得出（保留三位小数），并非任何真实模型的配置。</li><li>文中的 7 张示意图为配合本版数据重新绘制。</li></ul></div>
+    <aside class="toc" data-toc><p class="toc-title">本文目录</p><ul><li class="lvl-2"><a href="#undefined一一句话概括">一、一句话概括</a></li><li class="lvl-2"><a href="#undefined二为什么从-ffn-开始讲">二、为什么从 FFN 开始讲？</a></li><li class="lvl-2"><a href="#undefined三moe-的基本计算流程单个-token">三、MoE 的基本计算流程（单个 Token）</a></li><li class="lvl-3"><a href="#undefined1-router-打分">1. Router 打分</a></li><li class="lvl-3"><a href="#undefined2-top-k-选择">2. Top-k 选择</a></li><li class="lvl-3"><a href="#undefined3-softmax-求权重">3. Softmax 求权重</a></li><li class="lvl-3"><a href="#undefined4-专家计算-加权求和">4. 专家计算 + 加权求和</a></li><li class="lvl-3"><a href="#undefined5-流程小结">5. 流程小结</a></li><li class="lvl-2"><a href="#undefined四扩展到多个-token从向量到矩阵">四、扩展到多个 Token：从向量到矩阵</a></li><li class="lvl-2"><a href="#undefined五moe-的优点参数量与计算量解耦">五、MoE 的优点：参数量与计算量解耦</a></li><li class="lvl-2"><a href="#undefined六moe-的两个典型缺点">六、MoE 的两个典型缺点</a></li><li class="lvl-3"><a href="#undefined缺点-1负载不均load-imbalance">缺点 1：负载不均（Load Imbalance）</a></li><li class="lvl-3"><a href="#undefined缺点-2跨设备通信复杂度">缺点 2：跨设备通信复杂度</a></li><li class="lvl-2"><a href="#undefined七总结">七、总结</a></li><li class="lvl-2"><a href="#undefined八下一步">八、下一步</a></li><li class="lvl-2"><a href="#undefined附本章数据一览">附：本章数据一览</a></li><li class="lvl-2"><a href="#undefined说明">说明</a></li></ul></aside>
+  </div>
+  <footer class="post-foot">
+    <div class="post-tags"><a class="tag" href="/blog/tags/大模型/">大模型</a><a class="tag" href="/blog/tags/moe/">MoE</a><a class="tag" href="/blog/tags/模型架构/">模型架构</a><a class="tag" href="/blog/tags/深度学习/">深度学习</a></div>
+    <nav class="post-nav">
+      <a class="nav-prev" href="/blog/posts/inference-five-directions/"><span>← 上一篇</span><strong>大模型推理优化的五个方向</strong></a>
+      <a class="nav-next" href="/blog/posts/build-a-blog/"><span>下一篇 →</span><strong>用 200 行 Node 写一个静态博客</strong></a>
+    </nav>
+  </footer>
+</article></main>
+<footer class="site-foot">
+  <div class="wrap foot-inner">
+    <div class="foot-left">
+      <p class="foot-sign">© 2026 叶志汉</p>
+      <p class="foot-note">纯手工静态站 · 由 200 行 Node 脚本从 Markdown 生成</p>
+    </div>
+    <div class="foot-links">
+      <a href="/blog/rss.xml"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 19a1 1 0 1 0 0-.01"/><path d="M5 13a6 6 0 0 1 6 6M5 7a12 12 0 0 1 12 12"/></svg>RSS</a>
+      
+      <a href="https://github.com/yaLen404" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+<div class="palette" data-palette data-index="/blog/search.json" hidden>
+  <div class="palette-backdrop" data-palette-close></div>
+  <div class="palette-panel" role="dialog" aria-modal="true" aria-label="搜索文章">
+    <div class="palette-input">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input type="search" data-palette-input placeholder="搜索标题、标签或正文…" autocomplete="off" spellcheck="false">
+      <kbd>Esc</kbd>
+    </div>
+    <ul class="palette-list" data-palette-list></ul>
+    <p class="palette-empty" data-palette-empty hidden>没有找到相关文章</p>
+    <div class="palette-foot"><span>↑ ↓ 选择</span><span>↵ 打开</span><span>Esc 关闭</span></div>
+  </div>
+</div>
+<script src="/blog/assets/app.js?v=9e8635b6" defer></script>
+
+</body>
+</html>
