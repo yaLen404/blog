@@ -68,22 +68,26 @@ toc: true                  # 可选，正文标题足够多时自动生成目录
 BASE=/blog/ ORIGIN=https://example.com node build.mjs
 ```
 
-### 方案 A：GitHub Pages（免费，仓库里已配好）
+### 方案 A：GitHub Pages（免费，当前站点就是这么发的）
 
-`.github/workflows/deploy.yml` 会在每次 `push` 到 `main` 时自动构建并发布，
-`BASE` 会按仓库名自动设成 `/仓库名/`（仓库叫 `用户名.github.io` 时用根路径）。
+仓库里带了 `deploy.mjs`：本地构建 → 把 `dist/` 推到独立的 `gh-pages` 分支，不需要 Actions、不需要改代码。
 
 ```bash
-cd personal-blog
-git init -b main
-git add -A && git commit -m "init blog"
-gh repo create blog --public --source=. --remote=origin --push
+npm run deploy          # 等价于 node deploy.mjs
 ```
 
-推完去仓库 **Settings → Pages → Build and deployment → Source**，选 **GitHub Actions**。
-第一次发布约一分钟，地址是 `https://<用户名>.github.io/blog/`。
+它会自动判断仓库是「用户站点」（`用户名.github.io`，用根路径）还是「项目站点」（`仓库名`，用 `/仓库名/`）。
+绑定自定义域名后：
 
-> 要求仓库是公开的（免费账号）。第一次打开 Pages 设置前，Actions 里的 deploy 步骤可能会失败一次，选好 Source 后重新运行即可。
+```bash
+ORIGIN=https://blog.example.com node deploy.mjs
+```
+
+首次发布后，到仓库 **Settings → Pages → Build and deployment → Source** 选 **Deploy from a branch**，
+分支选 `gh-pages`、目录 `/`。以后每次 `npm run deploy` 都会自动更新。
+
+> 想要「push 就自动发布」也可以：把 `deploy/github-pages-workflow.yml` 拷回 `.github/workflows/deploy.yml`，
+> 再用一个有 `workflow` 权限的 token 推送（`gh auth refresh -s workflow`），然后在 Pages 里把 Source 切成 **GitHub Actions**。
 
 ### 方案 B：Cloudflare Pages（国内访问通常更顺）
 

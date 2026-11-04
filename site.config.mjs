@@ -14,10 +14,11 @@ export default {
     title: '在推理系统里<br>寻找下一个<em>瓶颈</em>',
     lede: '我是叶志汉。这里记录我对大模型推理优化、算法竞赛与工程实践的理解——尽量把来龙去脉讲清楚，而不是只给结论。',
   },
-  email: '15869499359@163.com',
+  // 留空则不在页面上显示邮箱；想公开就把地址填回来
+  email: '',
   socials: [
     // href 留空则不在页面上显示
-    { label: 'GitHub', href: '' },
+    { label: 'GitHub', href: 'https://github.com/yaLen404' },
     { label: '知乎', href: '' },
   ],
   now: '目前在折腾 nano-vllm 上的 MoE 推理与投机解码，也在准备下一场区域赛。',

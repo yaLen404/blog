@@ -366,7 +366,7 @@ function footer() {
     </div>
     <div class="foot-links">
       <a href="${u('rss.xml')}">${ICONS.rss}RSS</a>
-      <a href="mailto:${esc(site.email)}">邮箱</a>
+      ${site.email ? `<a href="mailto:${esc(site.email)}">邮箱</a>` : ''}
       ${socials}
     </div>
   </div>
@@ -635,8 +635,8 @@ const aboutCtx = { toc: [], rel: u('about/'), prefix: '' };
 const aboutHtml = renderBlocks(aboutParsed.body.split(/\r?\n/), aboutCtx);
 const contact = `<div class="contact-card">
   <p class="eyebrow"><span class="eyebrow-dot"></span>Contact</p>
-  <p>想聊推理优化、聊比赛，或者只是指出文中的错误，都欢迎来信。</p>
-  <a class="mailto" href="mailto:${esc(site.email)}">${esc(site.email)}</a>
+  <p>${site.email ? '想聊推理优化、聊比赛，或者只是指出文中的错误，都欢迎来信。' : '想聊推理优化、聊比赛，或者指出文中的错误，欢迎在 GitHub 上找我。'}</p>
+  ${site.email ? `<a class="mailto" href="mailto:${esc(site.email)}">${esc(site.email)}</a>` : ''}
   <div class="contact-links">
     ${site.socials.filter((s) => s.href).map((s) => `<a href="${esc(s.href)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}
     <a href="${u('rss.xml')}">RSS</a>
