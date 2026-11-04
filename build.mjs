@@ -394,11 +394,14 @@ function searchOverlay() {
 
 function layout({ title, description, content, active = '', bodyClass = '', math = false, canonical = '/', headExtra = '' }) {
   const fullTitle = title ? `${title} · ${site.title}` : `${site.title} · ${site.tagline}`;
+  const chrome = { paper: ['#f7f3ea', '#131210'], minimal: ['#ffffff', '#0a0a0a'], terminal: ['#070b09', '#070b09'], aurora: ['#f6f7fc', '#0b0a16'] }[site.skin] || ['#f7f3ea', '#131210'];
   return `<!doctype html>
 <html lang="${site.lang}" data-theme="light" data-skin="${esc(site.skin || 'paper')}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="${chrome[0]}" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="${chrome[1]}" media="(prefers-color-scheme: dark)">
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description || site.description)}">
 <meta name="author" content="${esc(site.title)}">

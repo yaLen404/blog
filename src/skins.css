@@ -308,7 +308,10 @@
 [data-skin="terminal"] .tag-card:hover { transform: none; box-shadow: none; border-color: var(--accent); }
 [data-skin="terminal"] .contact-card { background: transparent; border-style: dashed; }
 [data-skin="terminal"] .reading-bar { background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-[data-skin="terminal"] .btn { background: var(--accent); color: #04130b; border-color: var(--accent); }
+[data-skin="terminal"] .btn { background: var(--accent); color: #04130b; border-color: var(--accent); border-radius: 2px; }
+[data-skin="terminal"] .btn-ghost { background: transparent; color: var(--accent); border-color: var(--line-2); }
+[data-skin="terminal"] .nf-code { color: rgba(92, 242, 160, 0.16); }
+[data-skin="terminal"] .palette-backdrop { background: rgba(2, 6, 4, 0.72); }
 [data-skin="terminal"] .palette-panel { border-color: var(--line-2); background: var(--paper-2); }
 [data-skin="terminal"] .palette-list li.is-active a,
 [data-skin="terminal"] .palette-list a:hover { background: var(--accent-soft); }
