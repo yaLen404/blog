@@ -126,7 +126,30 @@ function readJson(req, limit = 12 * 1024 * 1024) {
 
 /* ---------------- 写作台接口 ---------------- */
 
+// 写作台没有登录（单人本地工具），所以只认本机请求：
+// 即使以后用 HOST=0.0.0.0 把站点共享到局域网，别人也只能看，不能改。
+function isLoopback(req) {
+  const addr = req.socket.remoteAddress || '';
+  return addr === '127.0.0.1' || addr === '::1' || addr === '::ffff:127.0.0.1';
+}
+
+function isLocalOrigin(req) {
+  const origin = req.headers.origin;
+  if (!origin) return true; // 本机 curl / 脚本
+  try {
+    const { hostname, protocol } = new URL(origin);
+    return (protocol === 'http:' || protocol === 'https:') &&
+      (hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '::1' || hostname === '[::1]');
+  } catch {
+    return false;
+  }
+}
+
 async function api(req, res, pathname, query) {
+  if (!isLoopback(req) || !isLocalOrigin(req)) {
+    return json(res, 403, { error: '写作台只允许从本机访问' });
+  }
+
   if (pathname === '/api/posts' && req.method === 'GET') {
     return json(res, 200, { posts: listPosts() });
   }
@@ -248,10 +271,15 @@ http.createServer(async (req, res) => {
     }
 
     // 写作台（只存在于本地，不会进 dist，也不会被发布）
-    if (pathname === '/write' || pathname === '/write/') {
-      return serveFile(res, path.join(ADMIN, 'index.html'));
-    }
-    if (pathname.startsWith('/write/')) {
+    if (pathname === '/write' || pathname.startsWith('/write/')) {
+      if (!isLoopback(req)) {
+        res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<meta charset="utf-8"><p style="font-family:monospace;padding:40px">写作台只允许从本机访问。</p>');
+        return;
+      }
+      if (pathname === '/write' || pathname === '/write/') {
+        return serveFile(res, path.join(ADMIN, 'index.html'));
+      }
       const f = path.join(ADMIN, pathname.slice('/write/'.length));
       if (f.startsWith(ADMIN) && fs.existsSync(f) && fs.statSync(f).isFile()) return serveFile(res, f);
     }
@@ -276,12 +304,14 @@ http.createServer(async (req, res) => {
   }
 }).listen(PORT, HOST, () => {
   console.log(`站点预览 http://127.0.0.1:${PORT}/`);
-  console.log(`写作台   http://127.0.0.1:${PORT}/write/`);
   if (HOST === '0.0.0.0') {
+    console.log('（写作台已自动限制为本机访问：局域网里的设备只能阅读站点）');
     for (const list of Object.values(os.networkInterfaces())) {
       for (const net of list || []) {
         if (net.family === 'IPv4' && !net.internal) console.log(`局域网 http://${net.address}:${PORT}/`);
       }
     }
+  } else {
+    console.log(`写作台   http://127.0.0.1:${PORT}/write/`);
   }
 });
