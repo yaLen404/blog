@@ -119,6 +119,20 @@ HOST=0.0.0.0 node server.mjs     # 同一 Wi-Fi 下用手机看：http://<你的
 npx localtunnel --port 4173      # 或 cloudflared tunnel --url http://127.0.0.1:4173
 ```
 
+## 换风格
+
+内置四套视觉风格，改 `site.config.mjs` 里的 `skin` 即可切换：
+
+| skin | 风格 |
+| --- | --- |
+| `paper` | 纸墨：暖白纸、宋体、朱红（默认） |
+| `minimal` | 极简：纯白、黑白灰、无圆角、无衬线 |
+| `terminal` | 终端：近黑、等宽、薄荷绿、虚线 |
+| `aurora` | 极光：冷色渐变、玻璃卡片、大圆角 |
+
+预览全部：`/styles/`；临时看某一套：在任意地址后面加 `?skin=terminal`。
+样式代码集中在 `src/skins.css`，每套都以 `[data-skin="名字"]` 开头，互不影响。
+
 ## 已内置的细节
 
 - 深浅色主题，首屏不闪白（在 `<head>` 里同步决定）

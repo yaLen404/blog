@@ -6,6 +6,9 @@ export default {
   base: '/',
   origin: 'http://127.0.0.1:4173',
   lang: 'zh-CN',
+  // 视觉风格：paper（纸墨） / minimal（极简） / terminal（终端） / aurora（极光）
+  // 预览全部：/styles/
+  skin: 'paper',
   description: '叶志汉的个人博客：大模型推理优化、算法竞赛与工程实践。',
   tagline: '在推理系统里寻找下一个瓶颈',
   hero: {

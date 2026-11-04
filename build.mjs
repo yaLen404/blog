@@ -319,7 +319,10 @@ const tags = [...tagMap.entries()].sort((a, b) => b[1].length - a[1].length || a
  * ------------------------------------------------------------------ */
 
 const cssVer = crypto.createHash('sha1').update(fs.readFileSync(path.join(ROOT, 'src/styles.css'))).digest('hex').slice(0, 8);
+const skinsVer = crypto.createHash('sha1').update(fs.readFileSync(path.join(ROOT, 'src/skins.css'))).digest('hex').slice(0, 8);
 const jsVer = crypto.createHash('sha1').update(fs.readFileSync(path.join(ROOT, 'src/app.js'))).digest('hex').slice(0, 8);
+
+const SKINS = ['paper', 'minimal', 'terminal', 'aurora'];
 
 const ICONS = {
   search: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>',
@@ -329,7 +332,7 @@ const ICONS = {
   rss: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M5 19a1 1 0 1 0 0-.01"/><path d="M5 13a6 6 0 0 1 6 6M5 7a12 12 0 0 1 12 12"/></svg>',
 };
 
-const themeScript = `<script>(function(){try{var t=localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.dataset.theme=t}catch(e){}})();</script>`;
+const themeScript = `<script>(function(){try{var qp=new URLSearchParams(location.search);var t=qp.get('theme')||localStorage.getItem('theme');if(!t){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;var s=qp.get('skin');if(s&&${JSON.stringify(SKINS)}.indexOf(s)>-1)document.documentElement.dataset.skin=s}catch(e){}})();</script>`;
 
 function header(active) {
   const nav = [
@@ -392,7 +395,7 @@ function searchOverlay() {
 function layout({ title, description, content, active = '', bodyClass = '', math = false, canonical = '/', headExtra = '' }) {
   const fullTitle = title ? `${title} · ${site.title}` : `${site.title} · ${site.tagline}`;
   return `<!doctype html>
-<html lang="${site.lang}" data-theme="light">
+<html lang="${site.lang}" data-theme="light" data-skin="${esc(site.skin || 'paper')}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -409,6 +412,7 @@ function layout({ title, description, content, active = '', bodyClass = '', math
 <link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1c1a17"/><text x="16" y="22" font-family="serif" font-size="18" fill="#f6f2ea" text-anchor="middle">叶</text></svg>`)}">
 ${themeScript}
 <link rel="stylesheet" href="${u(`assets/styles.css?v=${cssVer}`)}">
+<link rel="stylesheet" href="${u(`assets/skins.css?v=${skinsVer}`)}">
 ${math ? `<link rel="stylesheet" href="${u('vendor/katex/katex.min.css')}">` : ''}
 ${headExtra}
 </head>
@@ -661,6 +665,58 @@ writeFile('about/index.html', layout({
   canonical: 'about/',
 }));
 
+// 样式预览页（?skin= 切换）
+const SKIN_META = [
+  { id: 'paper', name: '纸墨', desc: '暖白纸面、宋体标题、朱红点缀，带一点纸张的颗粒感。偏出版物气质，写长文最耐读。', tags: ['宋体', '暖白纸', '朱红'] },
+  { id: 'minimal', name: '极简', desc: '纯白底、黑白灰、无圆角、无衬线。结构清晰、信息密度高，像一份排版考究的技术文档。', tags: ['无衬线', '黑白', '直角'] },
+  { id: 'terminal', name: '终端', desc: '近黑底、全站等宽、薄荷绿高亮、虚线边框，角落里还有扫描线。硬核技术博客的味道。', tags: ['等宽', '暗色', '荧光绿'] },
+  { id: 'aurora', name: '极光', desc: '冷色渐变、玻璃拟态卡片、大圆角。现代轻盈，适合想让博客看起来更有产品感的人。', tags: ['渐变', '玻璃拟态', '圆角'] },
+];
+
+const stylesContent = `<section class="wrap page-head">
+  <p class="eyebrow"><span class="eyebrow-dot"></span>Styles</p>
+  <h1 class="page-title">四种风格，挑一个</h1>
+  <p class="page-lede">同一份内容、同一套结构，只换视觉。下面看到的是真实页面（等比缩放），点「全屏预览」可以滚动查看完整效果；文章页也能用同样方式预览。</p>
+</section>
+<section class="wrap section">
+  <div class="skin-grid">
+    ${SKIN_META.map((s) => `<article class="skin-card">
+      <div class="skin-shot"><iframe src="${u('/')}?skin=${s.id}&amp;theme=light" title="${s.name} 风格预览" loading="lazy" scrolling="no"></iframe></div>
+      <div class="skin-body">
+        <h2 class="skin-name">${s.name}<code>${s.id}</code></h2>
+        <p class="skin-desc">${s.desc}</p>
+        <div class="skin-tags">${s.tags.map((t) => `<span>${t}</span>`).join('')}</div>
+        <div class="skin-actions">
+          <a href="${u('/')}?skin=${s.id}" target="_blank" rel="noopener">全屏预览 →</a>
+          <a href="${u('posts/moe/')}?skin=${s.id}" target="_blank" rel="noopener">看一篇长文</a>
+        </div>
+      </div>
+    </article>`).join('\n    ')}
+  </div>
+</section>
+<script>
+(function () {
+  var boxes = [].slice.call(document.querySelectorAll('.skin-shot'));
+  function fit(box) {
+    var f = box.querySelector('iframe');
+    if (f) f.style.transform = 'scale(' + (box.clientWidth / 1440) + ')';
+  }
+  boxes.forEach(function (box) {
+    fit(box);
+    if (window.ResizeObserver) new ResizeObserver(function () { fit(box); }).observe(box);
+  });
+})();
+</script>`;
+
+writeFile('styles/index.html', layout({
+  title: '样式预览',
+  description: '四套视觉风格预览：纸墨、极简、终端、极光。',
+  content: stylesContent,
+  bodyClass: 'page-styles skins-page',
+  canonical: 'styles/',
+  headExtra: '<meta name="robots" content="noindex">',
+}));
+
 writeFile('404.html', layout({
   title: '页面不存在',
   description: '这个地址好像没有内容。',
@@ -723,6 +779,7 @@ writeFile('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${site.origin}${u('si
 // 静态资源
 fs.mkdirSync(path.join(DIST, 'assets'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'src/styles.css'), path.join(DIST, 'assets/styles.css'));
+fs.copyFileSync(path.join(ROOT, 'src/skins.css'), path.join(DIST, 'assets/skins.css'));
 fs.copyFileSync(path.join(ROOT, 'src/app.js'), path.join(DIST, 'assets/app.js'));
 fs.copyFileSync(path.join(ROOT, 'src/math.js'), path.join(DIST, 'assets/math.js'));
 

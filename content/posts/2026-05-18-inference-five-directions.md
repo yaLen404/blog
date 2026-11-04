@@ -26,15 +26,15 @@ $$T_{batch} = \frac{F_{batch}}{P_{eff}} = \frac{BS \cdot (1 + N_{draft}) \cdot F
 
 | 符号 | 含义 | 说明 |
 | --- | --- | --- |
-| T_{batch} | 单 batch 推理耗时 | 基础时间指标 |
-| BS | 批大小（Batch Size） | 单 batch 中的请求数 |
-| N_{draft} | 投机推理 token 数 | 不开投机解码时为 0 |
-| F_{token} | 单 token 等效计算成本 | 可近似理解为 FLOPs；包含低精度、稀疏、冗余计算等因素后的等效成本 |
-| P_{peak} | 硬件峰值算力 | 单位：FLOPS |
-| U | 硬件利用率（时间维度） | 范围 0~1 |
-| E | 硬件利用效率（空间维度） | 范围 0~1 |
-| Acc | 投机接受率 | 范围 0~1，推导吞吐时引入 |
-| L | 上下文长度 | 影响 Attention 访存、KV Cache 和算子形态 |
+| $T_{batch}$ | 单 batch 推理耗时 | 基础时间指标 |
+| $BS$ | 批大小（Batch Size） | 单 batch 中的请求数 |
+| $N_{draft}$ | 投机推理 token 数 | 不开投机解码时为 0 |
+| $F_{token}$ | 单 token 等效计算成本 | 可近似理解为 FLOPs；包含低精度、稀疏、冗余计算等因素后的等效成本 |
+| $P_{peak}$ | 硬件峰值算力 | 单位：FLOPS |
+| $U$ | 硬件利用率（时间维度） | 范围 0~1 |
+| $E$ | 硬件利用效率（空间维度） | 范围 0~1 |
+| $Acc$ | 投机接受率 | 范围 0~1，推导吞吐时引入 |
+| $L$ | 上下文长度 | 影响 Attention 访存、KV Cache 和算子形态 |
 
 分子是一个 batch 的总计算量：batch 中的 token 数 $BS \cdot (1 + N_{draft})$ 乘以单 token 等效计算成本 $F_{token}$。分母是硬件实际发挥出来的算力：峰值算力 $P_{peak}$ 打个折扣，乘以利用率 $U$，再乘以利用效率 $E$。
 
@@ -98,11 +98,11 @@ $$TPS_{system} = Acc \cdot \frac{P_{peak} \cdot U \cdot E}{F_{token}}$$
 
 | 变量 | 关键问题 | 典型优化手段 | 主要约束 |
 | --- | --- | --- | --- |
-| E | 算子是否把计算单元打满 | 增大 BS、投机验证、FlashAttention、算子融合、KV/显存优化 | 显存、访存带宽、kernel 形态、用户时延 |
-| U | 时间线上硬件是否持续在算 | 通信计算重叠、CUDAGraph、异步调度、PD 分离、负载均衡 | 调度复杂度、通信拓扑、负载长尾 |
-| Acc | 投机 token 有多少被接受 | 更强 draft model、场景化 draft、tree-based speculation | rejection sampler 采样开销、数据分布、主模型验证成本 |
-| P_{peak} | 是否用上硬件更快路径 | FP8、INT8、硬件选型、并行配置 | 精度损失、硬件支持、算子覆盖率 |
-| F_{token} | 单 token 等效成本是否降低 | KV Cache、剪枝、稀疏化、低精度、结构优化 | 精度、模型质量、实现复杂度 |
+| $E$ | 算子是否把计算单元打满 | 增大 BS、投机验证、FlashAttention、算子融合、KV/显存优化 | 显存、访存带宽、kernel 形态、用户时延 |
+| $U$ | 时间线上硬件是否持续在算 | 通信计算重叠、CUDAGraph、异步调度、PD 分离、负载均衡 | 调度复杂度、通信拓扑、负载长尾 |
+| $Acc$ | 投机 token 有多少被接受 | 更强 draft model、场景化 draft、tree-based speculation | rejection sampler 采样开销、数据分布、主模型验证成本 |
+| $P_{peak}$ | 是否用上硬件更快路径 | FP8、INT8、硬件选型、并行配置 | 精度损失、硬件支持、算子覆盖率 |
+| $F_{token}$ | 单 token 等效成本是否降低 | KV Cache、剪枝、稀疏化、低精度、结构优化 | 精度、模型质量、实现复杂度 |
 
 ## $E$（硬件利用效率）
 
