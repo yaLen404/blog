@@ -1,0 +1,15 @@
+{
+  "name": "zhihan-blog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "叶志汉的个人博客：零依赖静态站点",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "serve": "node server.mjs",
+    "dev": "node build.mjs && node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

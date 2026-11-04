@@ -1,0 +1,6 @@
+dist/
+.tmp/
+.tmp-*
+.shots/
+node_modules/
+preview/
