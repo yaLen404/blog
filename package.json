@@ -5,6 +5,7 @@
   "description": "叶志汉的个人博客：零依赖静态站点",
   "type": "module",
   "scripts": {
+    "write": "node write.mjs",
     "build": "node build.mjs",
     "serve": "node server.mjs",
     "dev": "node build.mjs && node server.mjs",

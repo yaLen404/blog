@@ -9,13 +9,32 @@ content/posts/*.md   →   node build.mjs   →   dist/
 ## 快速开始
 
 ```bash
-node build.mjs          # 生成 dist/
-node server.mjs         # 本地预览 http://127.0.0.1:4173
+npm run write            # 打开写作台（推荐）：写文章、看实时预览
+npm run build            # 只生成 dist/
+npm run serve            # 本地预览 http://127.0.0.1:4173
+npm run deploy           # 发布到 GitHub Pages
 ```
 
 需要 Node 18+，没有任何第三方依赖（KaTeX 已提前放进 `vendor/`）。
 
-## 写一篇新文章
+## 写作台（不用开编辑器）
+
+```bash
+npm run write
+```
+
+浏览器会打开 `http://127.0.0.1:4173/write/`：
+
+- 左边列出所有文章，点一篇就能改；搜索框按标题 / 标签过滤；
+- 中间是元信息（标题、日期、标签、摘要、封面、目录开关）+ Markdown 正文，带常用语法按钮；
+- 「保存」直接把内容写回 `content/posts/*.md`，并自动重新构建站点；右侧「预览」是**真实页面**，不是模拟渲染；
+- 图片可以直接选文件上传，自动存进 `assets/` 并插入 Markdown 引用；
+- 删除会移到 `content/.trash/`，不会真的丢；
+- 快捷键：`Ctrl/⌘ + S` 保存，`Tab` 缩进。
+
+写作台只存在于本地（`admin/` 目录不会进 `dist/`，也不会被发布到线上），所以可以放心改。
+
+## 写一篇新文章（手动方式）
 
 在 `content/posts/` 下新建 `2026-11-20-hello.md`：
 

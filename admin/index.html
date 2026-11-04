@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>写作台 · 叶志汉</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23070b09'/%3E%3Ctext x='16' y='22' font-family='serif' font-size='18' fill='%235cf2a0' text-anchor='middle'%3E叶%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="/write/write.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="mark">叶</span>
+    <div>
+      <strong>写作台</strong>
+      <small>本地编辑 · 保存即构建</small>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a class="ghost" href="/" target="_blank" rel="noopener">打开站点 ↗</a>
+    <button class="ghost" id="btn-build" type="button">重新构建</button>
+    <button class="primary" id="btn-new" type="button">＋ 新建文章</button>
+  </div>
+</header>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="search">
+      <input id="filter" type="search" placeholder="搜索标题 / 标签…" autocomplete="off">
+    </div>
+    <ul class="posts" id="posts"></ul>
+    <p class="side-empty" id="side-empty" hidden>还没有文章</p>
+  </aside>
+
+  <main class="editor" id="editor">
+    <div class="empty" id="empty">
+      <p class="empty-mark">~/content/posts</p>
+      <h1>选一篇文章，或者新建一篇</h1>
+      <p>左边点开已有文章；写作台保存时会直接写回 <code>.md</code> 文件并重新构建站点。</p>
+      <button class="primary" id="btn-new-2" type="button">＋ 新建文章</button>
+    </div>
+
+    <form class="form" id="form" hidden>
+      <div class="meta">
+        <label class="field">
+          <span>标题</span>
+          <input id="f-title" type="text" placeholder="文章标题" required>
+        </label>
+        <div class="row">
+          <label class="field small">
+            <span>日期</span>
+            <input id="f-date" type="datetime-local">
+          </label>
+          <label class="field small">
+            <span>标签（逗号分隔）</span>
+            <input id="f-tags" type="text" placeholder="大模型, 系统">
+          </label>
+          <label class="field small">
+            <span>封面（可选）</span>
+            <input id="f-cover" type="text" placeholder="/images/cover.svg">
+          </label>
+          <label class="check">
+            <input id="f-toc" type="checkbox">
+            <span>生成目录</span>
+          </label>
+        </div>
+        <label class="field">
+          <span>摘要（出现在列表页和搜索结果里）</span>
+          <textarea id="f-desc" rows="2" placeholder="一句话说清这篇在讲什么"></textarea>
+        </label>
+      </div>
+
+      <div class="toolbar">
+        <div class="tools">
+          <button type="button" data-insert="h2">H2</button>
+          <button type="button" data-insert="h3">H3</button>
+          <button type="button" data-insert="bold"><b>B</b></button>
+          <button type="button" data-insert="code">＜＞</button>
+          <button type="button" data-insert="math">∑</button>
+          <button type="button" data-insert="table">表格</button>
+          <button type="button" data-insert="quote">引用</button>
+          <button type="button" data-insert="list">列表</button>
+          <button type="button" data-insert="hr">分隔线</button>
+          <button type="button" id="btn-image">图片</button>
+        </div>
+        <div class="toolbar-actions">
+          <button type="button" class="ghost" id="btn-preview">预览</button>
+          <button type="submit" class="primary" id="btn-save">保存</button>
+        </div>
+      </div>
+
+      <textarea id="f-body" class="body" spellcheck="false" placeholder="正文用 Markdown 写…"></textarea>
+
+      <div class="status">
+        <span class="file" id="f-file">—</span>
+        <span class="dirty" id="dirty"></span>
+        <span class="spacer"></span>
+        <span id="count">0 字</span>
+        <span class="hint">Ctrl+S 保存 · Tab 缩进</span>
+        <button type="button" class="danger" id="btn-del">删除</button>
+      </div>
+    </form>
+  </main>
+
+  <section class="preview" id="preview" hidden>
+    <div class="preview-head">
+      <span>预览</span>
+      <a id="open-post" href="#" target="_blank" rel="noopener">新窗口打开 ↗</a>
+      <button type="button" class="ghost" id="btn-close-preview">收起</button>
+    </div>
+    <iframe id="preview-frame" title="文章预览"></iframe>
+  </section>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="file-input" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" hidden>
+
+<script src="/write/write.js"></script>
+</body>
+</html>

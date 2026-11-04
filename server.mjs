@@ -1,14 +1,21 @@
-// 本地预览：node server.mjs（默认 http://127.0.0.1:4173）
+// 本地预览 + 写作台：node server.mjs（默认 http://127.0.0.1:4173）
+// 写作台：http://127.0.0.1:4173/write/
 // 想让同一 Wi-Fi 下的手机也能看：HOST=0.0.0.0 node server.mjs
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), 'dist');
+const SITE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.join(SITE, 'dist');
+const ADMIN = path.join(SITE, 'admin');
+const POSTS = path.join(SITE, 'content', 'posts');
+const ASSETS = path.join(SITE, 'assets');
 const PORT = Number(process.env.PORT) || 4173;
 const HOST = process.env.HOST || '127.0.0.1';
+const ORIGIN = `http://127.0.0.1:${PORT}`;
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -29,36 +36,247 @@ const MIME = {
   '.ttf': 'font/ttf',
 };
 
-http.createServer((req, res) => {
-  let pathname;
-  try {
-    pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-  } catch {
-    res.writeHead(400).end('Bad Request');
-    return;
+/* ---------------- 文章读写 ---------------- */
+
+const FILE_RE = /^[\p{L}\p{N}_-]+\.md$/u;
+
+function readFront(raw) {
+  const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  const data = {};
+  if (!m) return { data, body: raw };
+  let key = null;
+  for (const line of m[1].split(/\r?\n/)) {
+    if (!line.trim() || /^\s*#/.test(line)) continue;
+    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (kv) {
+      key = kv[1];
+      const v = kv[2].trim();
+      data[key] = v ? v.replace(/^["']|["']$/g, '') : [];
+      continue;
+    }
+    const item = line.match(/^\s*-\s+(.*)$/);
+    if (item && key) {
+      if (!Array.isArray(data[key])) data[key] = [];
+      data[key].push(item[1].trim().replace(/^["']|["']$/g, ''));
+    }
+  }
+  return { data, body: raw.slice(m[0].length) };
+}
+
+function listPosts() {
+  if (!fs.existsSync(POSTS)) return [];
+  return fs.readdirSync(POSTS)
+    .filter((f) => f.endsWith('.md'))
+    .map((file) => {
+      const raw = fs.readFileSync(path.join(POSTS, file), 'utf8');
+      const { data } = readFront(raw);
+      return {
+        file,
+        title: data.title || file.replace(/\.md$/, ''),
+        date: data.date || '',
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        draft: data.draft === true || data.draft === 'true',
+        words: raw.replace(/\s/g, '').length,
+      };
+    })
+    .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
+
+function rebuild() {
+  const r = spawnSync(process.execPath, ['build.mjs'], {
+    cwd: SITE,
+    encoding: 'utf8',
+    env: { ...process.env, BASE: '/', ORIGIN },
+  });
+  return {
+    ok: r.status === 0,
+    log: `${r.stdout || ''}${r.stderr || ''}`.trim(),
+  };
+}
+
+const json = (res, code, obj) => {
+  const body = JSON.stringify(obj);
+  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(body);
+};
+
+function readJson(req, limit = 12 * 1024 * 1024) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > limit) {
+        reject(new Error('请求体太大'));
+        req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'));
+      } catch (e) {
+        reject(e);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+/* ---------------- 写作台接口 ---------------- */
+
+async function api(req, res, pathname, query) {
+  if (pathname === '/api/posts' && req.method === 'GET') {
+    return json(res, 200, { posts: listPosts() });
   }
 
-  let file = path.join(ROOT, pathname);
-  if (!file.startsWith(ROOT)) {
-    res.writeHead(403).end('Forbidden');
-    return;
+  if (pathname === '/api/post' && req.method === 'GET') {
+    const file = query.get('file') || '';
+    if (!FILE_RE.test(file) || !fs.existsSync(path.join(POSTS, file))) return json(res, 404, { error: '文章不存在' });
+    return json(res, 200, { file, content: fs.readFileSync(path.join(POSTS, file), 'utf8') });
   }
 
-  if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
-
-  if (!fs.existsSync(file)) {
-    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(fs.readFileSync(path.join(ROOT, '404.html'), 'utf8'));
-    return;
+  if (pathname === '/api/save' && req.method === 'POST') {
+    const body = await readJson(req);
+    const file = body.file || '';
+    if (!FILE_RE.test(file)) return json(res, 400, { error: '文件名不合法' });
+    fs.writeFileSync(path.join(POSTS, file), String(body.content || ''), 'utf8');
+    const build = rebuild();
+    const slug = file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
+    return json(res, build.ok ? 200 : 500, { ...build, url: `/${'posts'}/${slug}/` });
   }
 
+  if (pathname === '/api/create' && req.method === 'POST') {
+    const body = await readJson(req);
+    let file = String(body.file || '').trim();
+    if (!file) {
+      const d = new Date();
+      const stamp = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      file = `${stamp}-untitled.md`;
+    }
+    if (!file.endsWith('.md')) file += '.md';
+    if (!FILE_RE.test(file)) return json(res, 400, { error: '文件名不合法（只能中英文、数字、下划线、短横线）' });
+    if (fs.existsSync(path.join(POSTS, file))) return json(res, 409, { error: '同名文章已存在' });
+
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+    const template = `---
+title: 未命名文章
+date: ${date}
+description: 一句话摘要，会出现在列表页和搜索结果里。
+tags:
+  - 随笔
+toc: true
+---
+
+正文从这里开始。
+
+## 小标题
+
+写点什么。
+`;
+    fs.writeFileSync(path.join(POSTS, file), template, 'utf8');
+    rebuild();
+    return json(res, 200, { file, content: template });
+  }
+
+  if (pathname === '/api/delete' && req.method === 'POST') {
+    const body = await readJson(req);
+    const file = body.file || '';
+    if (!FILE_RE.test(file)) return json(res, 400, { error: '文件名不合法' });
+    const target = path.join(POSTS, file);
+    if (!fs.existsSync(target)) return json(res, 404, { error: '文章不存在' });
+    const trash = path.join(SITE, 'content', '.trash');
+    fs.mkdirSync(trash, { recursive: true });
+    fs.renameSync(target, path.join(trash, `${Date.now()}-${file}`));
+    rebuild();
+    return json(res, 200, { ok: true });
+  }
+
+  if (pathname === '/api/upload' && req.method === 'POST') {
+    const body = await readJson(req);
+    const m = String(body.data || '').match(/^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);base64,(.+)$/);
+    if (!m) return json(res, 400, { error: '只支持 png / jpg / gif / webp / svg' });
+    const ext = m[1] === 'jpeg' ? 'jpg' : m[1] === 'svg+xml' ? 'svg' : m[1];
+    const base = String(body.name || 'image')
+      .replace(/\.[^.]+$/, '')
+      .toLowerCase()
+      .replace(/[^\p{L}\p{N}_-]+/gu, '-')
+      .replace(/^-|-$/g, '') || 'image';
+    const name = `${base}-${Date.now().toString(36)}.${ext}`;
+    fs.mkdirSync(ASSETS, { recursive: true });
+    fs.writeFileSync(path.join(ASSETS, name), Buffer.from(m[2], 'base64'));
+    return json(res, 200, { path: `/images/${name}` });
+  }
+
+  if (pathname === '/api/build' && req.method === 'POST') {
+    const build = rebuild();
+    return json(res, build.ok ? 200 : 500, build);
+  }
+
+  return json(res, 404, { error: 'not found' });
+}
+
+/* ---------------- 静态服务 ---------------- */
+
+function serveFile(res, file) {
   res.writeHead(200, {
     'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
     'Cache-Control': 'no-cache',
   });
   fs.createReadStream(file).pipe(res);
+}
+
+http.createServer(async (req, res) => {
+  let pathname;
+  let query;
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    pathname = decodeURIComponent(url.pathname);
+    query = url.searchParams;
+  } catch {
+    res.writeHead(400).end('Bad Request');
+    return;
+  }
+
+  try {
+    if (pathname.startsWith('/api/')) {
+      await api(req, res, pathname, query);
+      return;
+    }
+
+    // 写作台（只存在于本地，不会进 dist，也不会被发布）
+    if (pathname === '/write' || pathname === '/write/') {
+      return serveFile(res, path.join(ADMIN, 'index.html'));
+    }
+    if (pathname.startsWith('/write/')) {
+      const f = path.join(ADMIN, pathname.slice('/write/'.length));
+      if (f.startsWith(ADMIN) && fs.existsSync(f) && fs.statSync(f).isFile()) return serveFile(res, f);
+    }
+
+    let file = path.join(ROOT, pathname);
+    if (!file.startsWith(ROOT)) {
+      res.writeHead(403).end('Forbidden');
+      return;
+    }
+
+    if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
+
+    if (!fs.existsSync(file)) {
+      res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(fs.readFileSync(path.join(ROOT, '404.html'), 'utf8'));
+      return;
+    }
+
+    serveFile(res, file);
+  } catch (err) {
+    json(res, 500, { error: String(err && err.message ? err.message : err) });
+  }
 }).listen(PORT, HOST, () => {
-  console.log(`预览地址 http://127.0.0.1:${PORT}/`);
+  console.log(`站点预览 http://127.0.0.1:${PORT}/`);
+  console.log(`写作台   http://127.0.0.1:${PORT}/write/`);
   if (HOST === '0.0.0.0') {
     for (const list of Object.values(os.networkInterfaces())) {
       for (const net of list || []) {
