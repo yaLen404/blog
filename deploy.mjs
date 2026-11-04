@@ -39,7 +39,10 @@ git(['add', '-A'], stage);
 git(['-c', 'user.name=deploy', '-c', 'user.email=deploy@local', 'commit', '-q', '-m', `deploy ${new Date().toISOString()}`], stage);
 git(['remote', 'add', 'origin', remote], stage);
 git(['push', '-f', 'origin', 'gh-pages'], stage);
-fs.rmSync(stage, { recursive: true, force: true });
+try {
+  fs.rmSync(stage, { recursive: true, force: true });
+} catch {
+  // Windows 上 git 进程偶尔还占着临时目录，留着也无所谓
+}
 
 console.log(`✓ 已发布：${siteUrl}`);
-console.log('  （首次需要到仓库 Settings → Pages 把 Source 设为 gh-pages 分支）');
