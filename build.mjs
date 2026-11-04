@@ -14,6 +14,10 @@ const DIST = path.join(ROOT, 'dist');
 const BASE = site.base.endsWith('/') ? site.base : site.base + '/';
 const u = (p = '') => BASE + String(p).replace(/^\/+/, '');
 
+// 站点文案：全部集中在 content/site.json，可用写作台的「站点文案」页签修改
+const copy = JSON.parse(fs.readFileSync(path.join(ROOT, 'content/site.json'), 'utf8'));
+const fill = (str, vars = {}) => String(str).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+
 /* ------------------------------------------------------------------ *
  * 小工具
  * ------------------------------------------------------------------ */
@@ -336,22 +340,22 @@ const themeScript = `<script>(function(){try{var qp=new URLSearchParams(location
 
 function header(active) {
   const nav = [
-    ['/', '文章', 'index'],
-    ['/archive/', '归档', 'archive'],
-    ['/tags/', '标签', 'tags'],
-    ['/about/', '关于', 'about'],
-  ].map(([href, label, key]) => `<a href="${u(href)}"${active === key ? ' class="is-active" aria-current="page"' : ''}>${label}</a>`).join('');
+    ['/', copy.nav.posts, 'index'],
+    ['/archive/', copy.nav.archive, 'archive'],
+    ['/tags/', copy.nav.tags, 'tags'],
+    ['/about/', copy.nav.about, 'about'],
+  ].map(([href, label, key]) => `<a href="${u(href)}"${active === key ? ' class="is-active" aria-current="page"' : ''}>${esc(label)}</a>`).join('');
 
   return `<header class="site-head" data-head>
   <div class="wrap head-inner">
-    <a class="brand" href="${u('/')}" aria-label="返回首页">
-      <span class="brand-mark">叶</span>
-      <span class="brand-text">${esc(site.title)}<em>${esc(site.handle)}</em></span>
+    <a class="brand" href="${u('/')}" aria-label="${esc(copy.meta.brandAria)}">
+      <span class="brand-mark">${esc((copy.site.title || '叶').slice(0, 1))}</span>
+      <span class="brand-text">${esc(copy.site.title)}<em>${esc(copy.site.handle)}</em></span>
     </a>
     <nav class="nav" aria-label="主导航">${nav}</nav>
     <div class="head-tools">
-      <button class="icon-btn" type="button" data-search aria-label="搜索文章（快捷键 /）" title="搜索文章（/）">${ICONS.search}</button>
-      <button class="icon-btn" type="button" data-theme-toggle aria-label="切换深浅色" title="切换深浅色">
+      <button class="icon-btn" type="button" data-search aria-label="${esc(copy.meta.searchAria)}" title="${esc(copy.search.placeholder)}">${ICONS.search}</button>
+      <button class="icon-btn" type="button" data-theme-toggle aria-label="${esc(copy.meta.themeAria)}" title="${esc(copy.meta.themeAria)}">
         <span class="when-light">${ICONS.moon}</span><span class="when-dark">${ICONS.sun}</span>
       </button>
     </div>
@@ -364,12 +368,12 @@ function footer() {
   return `<footer class="site-foot">
   <div class="wrap foot-inner">
     <div class="foot-left">
-      <p class="foot-sign">© ${new Date().getFullYear()} ${esc(site.title)}</p>
-      <p class="foot-note">纯手工静态站 · 由 200 行 Node 脚本从 Markdown 生成</p>
+      <p class="foot-sign">© ${new Date().getFullYear()} ${esc(copy.site.title)}</p>
+      <p class="foot-note">${esc(copy.footer.note)}</p>
     </div>
     <div class="foot-links">
-      <a href="${u('rss.xml')}">${ICONS.rss}RSS</a>
-      ${site.email ? `<a href="mailto:${esc(site.email)}">邮箱</a>` : ''}
+      <a href="${u('rss.xml')}">${ICONS.rss}${esc(copy.footer.rss)}</a>
+      ${copy.site.email ? `<a href="mailto:${esc(copy.site.email)}">${esc(copy.footer.email)}</a>` : ''}
       ${socials}
     </div>
   </div>
@@ -382,18 +386,18 @@ function searchOverlay() {
   <div class="palette-panel" role="dialog" aria-modal="true" aria-label="搜索文章">
     <div class="palette-input">
       ${ICONS.search}
-      <input type="search" data-palette-input placeholder="搜索标题、标签或正文…" autocomplete="off" spellcheck="false">
+      <input type="search" data-palette-input placeholder="${esc(copy.search.placeholder)}" autocomplete="off" spellcheck="false">
       <kbd>Esc</kbd>
     </div>
     <ul class="palette-list" data-palette-list></ul>
-    <p class="palette-empty" data-palette-empty hidden>没有找到相关文章</p>
-    <div class="palette-foot"><span>↑ ↓ 选择</span><span>↵ 打开</span><span>Esc 关闭</span></div>
+    <p class="palette-empty" data-palette-empty hidden>${esc(copy.search.empty)}</p>
+    <div class="palette-foot"><span>${esc(copy.search.hintSelect)}</span><span>${esc(copy.search.hintOpen)}</span><span>${esc(copy.search.hintClose)}</span></div>
   </div>
 </div>`;
 }
 
 function layout({ title, description, content, active = '', bodyClass = '', math = false, canonical = '/', headExtra = '' }) {
-  const fullTitle = title ? `${title} · ${site.title}` : `${site.title} · ${site.tagline}`;
+  const fullTitle = title ? `${title} · ${copy.site.title}` : `${copy.site.title} · ${copy.site.tagline}`;
   const chrome = { paper: ['#f7f3ea', '#131210'], minimal: ['#ffffff', '#0a0a0a'], terminal: ['#070b09', '#070b09'], aurora: ['#f6f7fc', '#0b0a16'] }[site.skin] || ['#f7f3ea', '#131210'];
   return `<!doctype html>
 <html lang="${site.lang}" data-theme="light" data-skin="${esc(site.skin || 'paper')}">
@@ -403,16 +407,16 @@ function layout({ title, description, content, active = '', bodyClass = '', math
 <meta name="theme-color" content="${chrome[0]}" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="${chrome[1]}" media="(prefers-color-scheme: dark)">
 <title>${esc(fullTitle)}</title>
-<meta name="description" content="${esc(description || site.description)}">
-<meta name="author" content="${esc(site.title)}">
+<meta name="description" content="${esc(description || copy.site.description)}">
+<meta name="author" content="${esc(copy.site.title)}">
 <meta property="og:type" content="website">
 <meta property="og:title" content="${esc(fullTitle)}">
-<meta property="og:description" content="${esc(description || site.description)}">
-<meta property="og:site_name" content="${esc(site.title)}">
+<meta property="og:description" content="${esc(description || copy.site.description)}">
+<meta property="og:site_name" content="${esc(copy.site.title)}">
 <meta property="og:url" content="${esc(site.origin + u(canonical))}">
 <link rel="canonical" href="${esc(site.origin + u(canonical))}">
-<link rel="alternate" type="application/rss+xml" title="${esc(site.title)}" href="${u('rss.xml')}">
-<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1c1a17"/><text x="16" y="22" font-family="serif" font-size="18" fill="#f6f2ea" text-anchor="middle">叶</text></svg>`)}">
+<link rel="alternate" type="application/rss+xml" title="${esc(copy.site.title)}" href="${u('rss.xml')}">
+<link rel="icon" href="data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1c1a17"/><text x="16" y="22" font-family="serif" font-size="18" fill="#f6f2ea" text-anchor="middle">${esc((copy.site.title || '叶').slice(0, 1))}</text></svg>`)}">
 ${themeScript}
 <link rel="stylesheet" href="${u(`assets/styles.css?v=${cssVer}`)}">
 <link rel="stylesheet" href="${u(`assets/skins.css?v=${skinsVer}`)}">
@@ -420,7 +424,7 @@ ${math ? `<link rel="stylesheet" href="${u('vendor/katex/katex.min.css')}">` : '
 ${headExtra}
 </head>
 <body class="${bodyClass}">
-<a class="skip" href="#main">跳到正文</a>
+<a class="skip" href="#main">${esc(copy.meta.skip)}</a>
 ${header(active)}
 <main id="main">${content}</main>
 ${footer()}
@@ -446,7 +450,7 @@ function postRow(p, n) {
     <div class="row-body">
       <h2 class="row-title"><a href="${u(`posts/${p.slug}/`)}">${esc(p.title)}</a></h2>
       <p class="row-desc">${esc(p.description)}</p>
-      <div class="row-tags">${tagLinks(p.tags)}<span class="row-dot">·</span><span class="row-time">${p.minutes} 分钟</span></div>
+      <div class="row-tags">${tagLinks(p.tags)}<span class="row-dot">·</span><span class="row-time">${esc(fill(copy.pages.post.minutesShort, { n: p.minutes }))}</span></div>
     </div>
     <span class="row-arrow" aria-hidden="true">${ICONS.arrow}</span>
   </article>`;
@@ -461,21 +465,21 @@ const allTags = tags.length;
 
 const homeContent = `<section class="hero">
   <div class="wrap">
-    <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(site.hero.eyebrow)}</p>
-    <h1 class="hero-title">${site.hero.title}</h1>
-    <p class="hero-lede">${esc(site.hero.lede)}</p>
+    <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.home.eyebrow)}</p>
+    <h1 class="hero-title">${copy.home.title}</h1>
+    <p class="hero-lede">${esc(copy.home.lede)}</p>
     <div class="hero-meta">
-      <span><strong>${posts.length}</strong> 篇文章</span>
-      <span><strong>${allTags}</strong> 个标签</span>
-      <span>最近更新 <strong>${latest[0] ? fmtDate(latest[0].date) : '—'}</strong></span>
+      <span>${fill(copy.home.statPosts, { n: `<strong>${posts.length}</strong>` })}</span>
+      <span>${fill(copy.home.statTags, { n: `<strong>${allTags}</strong>` })}</span>
+      <span>${esc(copy.home.updated)} <strong>${latest[0] ? fmtDate(latest[0].date) : '—'}</strong></span>
     </div>
   </div>
 </section>
 
 <section class="wrap section" id="writing">
   <div class="section-head">
-    <h2 class="section-title">近期文章</h2>
-    <a class="more" href="${u('archive/')}">全部文章 ${ICONS.arrow}</a>
+    <h2 class="section-title">${esc(copy.home.recent)}</h2>
+    <a class="more" href="${u('archive/')}">${esc(copy.home.more)} ${ICONS.arrow}</a>
   </div>
   <div class="post-list">
     ${latest.map((p, i) => postRow(p, i + 1)).join('\n    ')}
@@ -484,19 +488,19 @@ const homeContent = `<section class="hero">
 
 <section class="wrap section now-band">
   <div class="now-inner">
-    <p class="eyebrow"><span class="eyebrow-dot"></span>Now</p>
-    <p class="now-text">${esc(site.now)}</p>
+    <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.home.nowLabel)}</p>
+    <p class="now-text">${esc(copy.home.nowText)}</p>
     <div class="now-links">
-      <a class="link-arrow" href="${u('about/')}">关于我 ${ICONS.arrow}</a>
-      <a class="link-arrow" href="${u('rss.xml')}">订阅 RSS ${ICONS.arrow}</a>
+      <a class="link-arrow" href="${u('about/')}">${esc(copy.home.nowAbout)} ${ICONS.arrow}</a>
+      <a class="link-arrow" href="${u('rss.xml')}">${esc(copy.home.nowRss)} ${ICONS.arrow}</a>
     </div>
   </div>
 </section>`;
 
 const archiveContent = `<section class="wrap page-head">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Archive</p>
-  <h1 class="page-title">全部文章</h1>
-  <p class="page-lede">共 ${posts.length} 篇。按时间倒序排列，${tags.length} 个标签可以在<a href="${u('tags/')}">标签页</a>里翻。</p>
+  <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.archive.eyebrow)}</p>
+  <h1 class="page-title">${esc(copy.pages.archive.title)}</h1>
+  <p class="page-lede">${fill(copy.pages.archive.lede, { n: posts.length })} <a href="${u('tags/')}">${esc(copy.pages.archive.tagsLink)} →</a></p>
 </section>
 <section class="wrap section archive">
   ${[...new Set(posts.map((p) => p.date.getFullYear()))].map((year) => {
@@ -517,9 +521,9 @@ const archiveContent = `<section class="wrap page-head">
 </section>`;
 
 const tagsContent = `<section class="wrap page-head">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Tags</p>
-  <h1 class="page-title">标签</h1>
-  <p class="page-lede">${tags.length} 个标签，点进去是相关的全部文章。</p>
+  <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.tags.eyebrow)}</p>
+  <h1 class="page-title">${esc(copy.pages.tags.title)}</h1>
+  <p class="page-lede">${fill(copy.pages.tags.lede, { n: tags.length })}</p>
 </section>
 <section class="wrap section">
   <div class="tag-grid">
@@ -535,7 +539,7 @@ function postPage(p, index) {
   const prev = posts[index + 1];
   const next = posts[index - 1];
   const tocHtml = p.toc.length >= 2
-    ? `<aside class="toc" data-toc><p class="toc-title">本文目录</p><ul>${p.toc.map((t) => `<li class="lvl-${t.level}"><a href="#${t.prefix}${t.id}">${esc(t.text)}</a></li>`).join('')}</ul></aside>`
+    ? `<aside class="toc" data-toc><p class="toc-title">${esc(copy.pages.post.toc)}</p><ul>${p.toc.map((t) => `<li class="lvl-${t.level}"><a href="#${t.prefix}${t.id}">${esc(t.text)}</a></li>`).join('')}</ul></aside>`
     : '';
 
   return `<div class="reading-bar" data-progress></div>
@@ -543,7 +547,7 @@ function postPage(p, index) {
   <header class="post-head">
     <p class="post-kicker">
       <time datetime="${p.date.toISOString()}">${fmtDateLong(p.date)}</time>
-      <span class="dot">·</span><span>约 ${p.minutes} 分钟</span>
+      <span class="dot">·</span><span>${esc(fill(copy.pages.post.minutes, { n: p.minutes }))}</span>
       ${p.tags.length ? `<span class="dot">·</span>${p.tags.map((t) => `<a href="${u(`tags/${slugify(t)}/`)}">${esc(t)}</a>`).join('<span class="sep">/</span>')}` : ''}
     </p>
     <h1 class="post-title">${esc(p.title)}</h1>
@@ -557,8 +561,8 @@ function postPage(p, index) {
   <footer class="post-foot">
     <div class="post-tags">${tagLinks(p.tags, { limit: 8 })}</div>
     <nav class="post-nav">
-      ${prev ? `<a class="nav-prev" href="${u(`posts/${prev.slug}/`)}"><span>← 上一篇</span><strong>${esc(prev.title)}</strong></a>` : '<span></span>'}
-      ${next ? `<a class="nav-next" href="${u(`posts/${next.slug}/`)}"><span>下一篇 →</span><strong>${esc(next.title)}</strong></a>` : '<span></span>'}
+      ${prev ? `<a class="nav-prev" href="${u(`posts/${prev.slug}/`)}"><span>${esc(copy.pages.post.prev)}</span><strong>${esc(prev.title)}</strong></a>` : '<span></span>'}
+      ${next ? `<a class="nav-next" href="${u(`posts/${next.slug}/`)}"><span>${esc(copy.pages.post.next)}</span><strong>${esc(next.title)}</strong></a>` : '<span></span>'}
     </nav>
   </footer>
 </article>`;
@@ -566,9 +570,9 @@ function postPage(p, index) {
 
 function tagPage(name, list) {
   return `<section class="wrap page-head">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Tag</p>
+  <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.tag.eyebrow)}</p>
   <h1 class="page-title">${esc(name)}</h1>
-  <p class="page-lede">共 ${list.length} 篇 · <a href="${u('tags/')}">返回全部标签</a></p>
+  <p class="page-lede">${fill(copy.pages.tag.lede, { n: list.length })}<a href="${u('tags/')}">${esc(copy.pages.tag.back)}</a></p>
 </section>
 <section class="wrap section post-list">
   ${list.map((p, i) => postRow(p, i + 1)).join('\n  ')}
@@ -595,7 +599,7 @@ writeFile('index.html', layout({
 }));
 
 writeFile('archive/index.html', layout({
-  title: '归档',
+  title: copy.pages.archive.title,
   description: `全部 ${posts.length} 篇文章，按时间倒序。`,
   content: archiveContent,
   active: 'archive',
@@ -604,7 +608,7 @@ writeFile('archive/index.html', layout({
 }));
 
 writeFile('tags/index.html', layout({
-  title: '标签',
+  title: copy.pages.tags.title,
   description: '按标签浏览文章。',
   content: tagsContent,
   active: 'tags',
@@ -641,22 +645,22 @@ const aboutParsed = parseFrontMatter(aboutRaw);
 const aboutCtx = { toc: [], rel: u('about/'), prefix: '' };
 const aboutHtml = renderBlocks(aboutParsed.body.split(/\r?\n/), aboutCtx);
 const contact = `<div class="contact-card">
-  <p class="eyebrow"><span class="eyebrow-dot"></span>Contact</p>
-  <p>${site.email ? '想聊推理优化、聊比赛，或者只是指出文中的错误，都欢迎来信。' : '想聊推理优化、聊比赛，或者指出文中的错误，欢迎在 GitHub 上找我。'}</p>
-  ${site.email ? `<a class="mailto" href="mailto:${esc(site.email)}">${esc(site.email)}</a>` : ''}
+  <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.about.contactTitle)}</p>
+  <p>${esc(copy.site.email ? copy.pages.about.contactLead : copy.pages.about.contactLeadNoEmail)}</p>
+  ${copy.site.email ? `<a class="mailto" href="mailto:${esc(copy.site.email)}">${esc(copy.site.email)}</a>` : ''}
   <div class="contact-links">
     ${site.socials.filter((s) => s.href).map((s) => `<a href="${esc(s.href)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join('')}
-    <a href="${u('rss.xml')}">RSS</a>
+    <a href="${u('rss.xml')}">${esc(copy.footer.rss)}</a>
   </div>
 </div>`;
 
 writeFile('about/index.html', layout({
-  title: '关于',
-  description: aboutParsed.data.description || `关于 ${site.title}`,
+  title: copy.pages.about.title,
+  description: aboutParsed.data.description || `${copy.pages.about.title} · ${copy.site.title}`,
   content: `<section class="wrap about-shell">
   <div class="page-head">
-    <p class="eyebrow"><span class="eyebrow-dot"></span>About</p>
-    <h1 class="page-title">${esc(aboutParsed.data.title || '关于')}</h1>
+    <p class="eyebrow"><span class="eyebrow-dot"></span>${esc(copy.pages.about.eyebrow)}</p>
+    <h1 class="page-title">${esc(aboutParsed.data.title || copy.pages.about.title)}</h1>
   </div>
   <div class="post-layout about-layout">
     <div class="prose">${aboutHtml}</div>
@@ -724,12 +728,12 @@ writeFile('404.html', layout({
   title: '页面不存在',
   description: '这个地址好像没有内容。',
   content: `<section class="wrap notfound">
-  <p class="nf-code">404</p>
-  <h1>这一页还没写</h1>
-  <p>你要找的地址不存在，或者已经被我改名了。</p>
+  <p class="nf-code">${esc(copy.pages.notFound.code)}</p>
+  <h1>${esc(copy.pages.notFound.title)}</h1>
+  <p>${esc(copy.pages.notFound.text)}</p>
   <div class="nf-actions">
-    <a class="btn" href="${u('/')}">回到首页</a>
-    <button class="btn btn-ghost" type="button" data-search>搜索一下</button>
+    <a class="btn" href="${u('/')}">${esc(copy.pages.notFound.home)}</a>
+    <button class="btn btn-ghost" type="button" data-search>${esc(copy.pages.notFound.search)}</button>
   </div>
 </section>`,
   canonical: '404.html',
@@ -758,9 +762,9 @@ const rssItems = posts.slice(0, 20).map((p) => `    <item>
 writeFile('rss.xml', `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${esc(site.title)}</title>
+    <title>${esc(copy.site.title)}</title>
     <link>${site.origin}${BASE}</link>
-    <description>${esc(site.description)}</description>
+    <description>${esc(copy.site.description)}</description>
     <language>${site.lang}</language>
     <atom:link href="${site.origin}${u('rss.xml')}" rel="self" type="application/rss+xml"/>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>

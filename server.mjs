@@ -234,6 +234,19 @@ toc: true
     return json(res, 200, { path: `/images/${name}` });
   }
 
+  if (pathname === '/api/site' && req.method === 'GET') {
+    return json(res, 200, { copy: JSON.parse(fs.readFileSync(path.join(SITE, 'content', 'site.json'), 'utf8')) });
+  }
+
+  if (pathname === '/api/site' && req.method === 'POST') {
+    const body = await readJson(req);
+    const data = body.copy;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return json(res, 400, { error: '数据格式不对' });
+    fs.writeFileSync(path.join(SITE, 'content', 'site.json'), JSON.stringify(data, null, 2) + '\n', 'utf8');
+    const build = rebuild();
+    return json(res, build.ok ? 200 : 500, build);
+  }
+
   if (pathname === '/api/build' && req.method === 'POST') {
     const build = rebuild();
     return json(res, build.ok ? 200 : 500, build);

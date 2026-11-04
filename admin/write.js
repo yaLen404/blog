@@ -10,12 +10,16 @@
     dirty: $('dirty'), count: $('count'), toast: $('toast'),
     preview: $('preview'), frame: $('preview-frame'), openPost: $('open-post'),
     fileInput: $('file-input'), sideEmpty: $('side-empty'),
+    siteform: $('siteform'), siteFields: $('siteform-fields'), siteDirty: $('site-dirty'),
   };
 
   let current = null; // { file, content }
   let dirty = false;
   let allPosts = [];
   let previewOpen = false;
+  let tab = 'posts';
+  let siteCopy = null;
+  let siteDirty = false;
 
   /* ---------- 小工具 ---------- */
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -116,6 +120,203 @@
   };
   const slugOf = (file) => file.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.md$/, '');
 
+  /* ---------- 站点文案 ---------- */
+  const SITE_LABELS = {
+    'site.title': '站点名',
+    'site.handle': '英文名 / 副标题',
+    'site.description': '站点描述（SEO / 分享卡片）',
+    'site.tagline': '一句话标语',
+    'site.email': '邮箱（留空则不显示）',
+    'nav.posts': '导航 · 文章',
+    'nav.archive': '导航 · 归档',
+    'nav.tags': '导航 · 标签',
+    'nav.about': '导航 · 关于',
+    'home.eyebrow': '首页顶部小字',
+    'home.title': '首页大标题',
+    'home.lede': '首页介绍段',
+    'home.statPosts': '统计 · 文章数',
+    'home.statTags': '统计 · 标签数',
+    'home.updated': '统计 · 最近更新',
+    'home.recent': '版块标题 · 近期文章',
+    'home.more': '链接 · 全部文章',
+    'home.nowLabel': 'Now 小标题',
+    'home.nowText': 'Now 正文',
+    'home.nowAbout': 'Now 链接 · 关于我',
+    'home.nowRss': 'Now 链接 · 订阅',
+    'pages.archive.eyebrow': '归档页 · 小标题',
+    'pages.archive.title': '归档页 · 标题',
+    'pages.archive.lede': '归档页 · 说明（{n} = 篇数）',
+    'pages.archive.tagsLink': '归档页 · 标签链接',
+    'pages.tags.eyebrow': '标签页 · 小标题',
+    'pages.tags.title': '标签页 · 标题',
+    'pages.tags.lede': '标签页 · 说明（{n} = 标签数）',
+    'pages.tag.eyebrow': '单标签页 · 小标题',
+    'pages.tag.lede': '单标签页 · 说明（{n} = 篇数）',
+    'pages.tag.back': '单标签页 · 返回链接',
+    'pages.about.eyebrow': '关于页 · 小标题',
+    'pages.about.title': '关于页 · 标题',
+    'pages.about.contactTitle': '关于页 · 联系卡片标题',
+    'pages.about.contactLead': '关于页 · 有邮箱时',
+    'pages.about.contactLeadNoEmail': '关于页 · 无邮箱时',
+    'pages.post.minutes': '文章页 · 阅读时长（{n} = 分钟）',
+    'pages.post.minutesShort': '列表页 · 阅读时长',
+    'pages.post.toc': '文章页 · 目录标题',
+    'pages.post.prev': '文章页 · 上一篇',
+    'pages.post.next': '文章页 · 下一篇',
+    'pages.notFound.code': '404 · 大数字',
+    'pages.notFound.title': '404 · 标题',
+    'pages.notFound.text': '404 · 说明',
+    'pages.notFound.home': '404 · 回首页按钮',
+    'pages.notFound.search': '404 · 搜索按钮',
+    'search.placeholder': '搜索框占位文字',
+    'search.empty': '搜索无结果提示',
+    'search.hintSelect': '搜索 · 选择提示',
+    'search.hintOpen': '搜索 · 打开提示',
+    'search.hintClose': '搜索 · 关闭提示',
+    'footer.note': '页脚说明',
+    'footer.rss': '页脚 · RSS',
+    'footer.email': '页脚 · 邮箱',
+    'meta.skip': '无障碍 · 跳到正文',
+    'meta.brandAria': '无障碍 · 品牌链接',
+    'meta.searchAria': '无障碍 · 搜索按钮',
+    'meta.themeAria': '无障碍 · 主题按钮',
+  };
+
+  const SITE_GROUPS = {
+    site: '站点信息',
+    nav: '导航',
+    home: '首页',
+    pages: '各页面',
+    search: '搜索面板',
+    footer: '页脚',
+    meta: '无障碍标签',
+  };
+
+  const PAGE_NAMES = {
+    archive: '归档页',
+    tags: '标签页',
+    tag: '单个标签页',
+    about: '关于页',
+    post: '文章页',
+    notFound: '404 页面',
+  };
+
+  const LONG_KEYS = new Set(['title', 'lede', 'description', 'text', 'note', 'contactLead', 'contactLeadNoEmail', 'nowText', 'tagline']);
+
+  function siteField(path, value, label) {
+    const id = `sf-${path.replace(/\./g, '-')}`;
+    const key = path.split('.').pop();
+    const len = String(value).length;
+    const isLong = len > 40 || (LONG_KEYS.has(key) && len > 12);
+    const control = isLong
+      ? `<textarea id="${id}" rows="2" data-site-path="${path}">${esc(value)}</textarea>`
+      : `<input id="${id}" type="text" data-site-path="${path}" value="${esc(value)}">`;
+    return `<div class="sf-row" data-row="${path}">
+      <label for="${id}">${esc(label || path)}</label>
+      ${control}
+    </div>`;
+  }
+
+  function renderSiteForm(copy) {
+    let html = '';
+    for (const [key, section] of Object.entries(copy)) {
+      if (!section || typeof section !== 'object') continue;
+      html += `<div class="sf-group"><h3>${esc(SITE_GROUPS[key] || key)}</h3>`;
+      for (const [sub, value] of Object.entries(section)) {
+        if (value && typeof value === 'object') {
+          // pages 下面再分一层
+          html += `<p class="sf-sub">${esc(PAGE_NAMES[sub] || sub)}</p>`;
+          for (const [leaf, text] of Object.entries(value)) {
+            const path = `${key}.${sub}.${leaf}`;
+            html += siteField(path, text, SITE_LABELS[path]);
+          }
+        } else {
+          const path = `${key}.${sub}`;
+          html += siteField(path, value, SITE_LABELS[path]);
+        }
+      }
+      html += '</div>';
+    }
+    els.siteFields.innerHTML = html;
+    markSiteDirty(false);
+  }
+
+  async function loadSite(force = false) {
+    if (siteCopy && !force) return;
+    const data = await api('/api/site');
+    siteCopy = data.copy;
+    renderSiteForm(siteCopy);
+  }
+
+  function collectSite() {
+    const out = {};
+    els.siteFields.querySelectorAll('[data-site-path]').forEach((el) => {
+      const path = el.dataset.sitePath.split('.');
+      let node = out;
+      path.slice(0, -1).forEach((k) => {
+        node[k] = node[k] || {};
+        node = node[k];
+      });
+      node[path[path.length - 1]] = el.value;
+    });
+    return out;
+  }
+
+  function markSiteDirty(v) {
+    siteDirty = v;
+    if (els.siteDirty) els.siteDirty.textContent = v ? '● 未保存' : '';
+  }
+
+  async function saveSite() {
+    try {
+      const data = await postJSON('/api/site', { copy: collectSite() });
+      siteCopy = collectSite();
+      markSiteDirty(false);
+      els.siteFields.querySelectorAll('.sf-row.is-dirty').forEach((r) => r.classList.remove('is-dirty'));
+      toast(data.ok ? '文案已保存并重新构建' : '构建失败，看控制台');
+    } catch (err) {
+      toast(err.message, true);
+    }
+  }
+
+  async function switchTab(next) {
+    tab = next;
+    document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('is-active', b.dataset.tab === next));
+    const siteMode = next === 'site';
+    els.app.classList.toggle('site-mode', siteMode);
+    els.siteform.hidden = !siteMode;
+    els.empty.hidden = siteMode || !!current;
+    els.form.hidden = siteMode || !current;
+    $('btn-new').hidden = siteMode;
+    if (siteMode) {
+      previewOpen = false;
+      els.preview.hidden = true;
+      els.app.classList.remove('with-preview');
+      try {
+        await loadSite();
+      } catch (err) {
+        toast(err.message, true);
+      }
+    }
+  }
+
+  document.querySelectorAll('.tab').forEach((b) => {
+    b.addEventListener('click', () => {
+      if (b.dataset.tab === tab) return;
+      if (tab === 'posts' && dirty && !window.confirm('文章还没保存，确定离开吗？')) return;
+      if (tab === 'site' && siteDirty && !window.confirm('文案还没保存，确定离开吗？')) return;
+      switchTab(b.dataset.tab);
+    });
+  });
+
+  els.siteFields.addEventListener('input', (e) => {
+    if (!e.target.dataset.sitePath) return;
+    markSiteDirty(true);
+    e.target.closest('.sf-row')?.classList.add('is-dirty');
+  });
+
+  $('btn-site-save').addEventListener('click', saveSite);
+
   /* ---------- 列表 ---------- */
   async function loadPosts() {
     const data = await api('/api/posts');
@@ -164,6 +365,7 @@
   }
 
   async function createPost() {
+    if (tab === 'site') await switchTab('posts');
     const d = new Date();
     const p = (n) => String(n).padStart(2, '0');
     const guess = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-untitled.md`;
@@ -307,12 +509,13 @@
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
       e.preventDefault();
-      save();
+      if (tab === 'site') saveSite();
+      else save();
     }
   });
 
   window.addEventListener('beforeunload', (e) => {
-    if (!dirty) return;
+    if (!dirty && !siteDirty) return;
     e.preventDefault();
     e.returnValue = '';
   });

@@ -23,7 +23,9 @@ npm run deploy           # 发布到 GitHub Pages
 npm run write
 ```
 
-浏览器会打开 `http://127.0.0.1:4173/write/`：
+浏览器会打开 `http://127.0.0.1:4173/write/`，顶栏有两个页签：
+
+**文章**
 
 - 左边列出所有文章，点一篇就能改；搜索框按标题 / 标签过滤；
 - 中间是元信息（标题、日期、标签、摘要、封面、目录开关）+ Markdown 正文，带常用语法按钮；
@@ -31,6 +33,12 @@ npm run write
 - 图片可以直接选文件上传，自动存进 `assets/` 并插入 Markdown 引用；
 - 删除会移到 `content/.trash/`，不会真的丢；
 - 快捷键：`Ctrl/⌘ + S` 保存，`Tab` 缩进。
+
+**站点文案**
+
+- 首页大标题、介绍段、统计文字、导航、页脚、404、搜索框提示、各个页面标题都在这里；
+- 保存后写回 `content/site.json` 并重新构建，改完刷新页面即可看到；
+- 每条都带说明，`{n}` 是数字占位符。
 
 写作台只存在于本地（`admin/` 目录不会进 `dist/`，也不会被发布到线上），所以可以放心改。
 
@@ -60,23 +68,31 @@ toc: true                  # 可选，正文标题足够多时自动生成目录
 | 路径 | 作用 |
 | --- | --- |
 | `content/posts/` | 文章，一篇文章一个 `.md` |
-| `content/pages/about.md` | 关于页 |
+| `content/pages/about.md` | 关于页正文 |
+| `content/site.json` | **站点全部文案**（导航、首页、页脚、404、搜索框…） |
+| `admin/` | 本地写作台界面（不会进入 `dist/`，不发布） |
 | `src/styles.css` | 所有样式（配色靠 CSS 变量） |
+| `src/skins.css` | 四套视觉风格 |
 | `src/app.js` | 主题切换、搜索面板、目录跟随、复制代码 |
 | `src/math.js` | KaTeX 初始化 |
 | `assets/` | 图片资源 |
 | `vendor/katex/` | 离线公式渲染 |
 | `build.mjs` | 生成器 |
-| `server.mjs` | 本地静态服务器 |
+| `server.mjs` | 本地服务器 + 写作台接口 |
+| `write.mjs` | 打开写作台 |
+| `deploy.mjs` | 发布到 GitHub Pages |
 | `dist/` | 构建产物 |
 
 ## 想改哪里
 
-- **名字、简介、邮箱、社交链接**：`site.config.mjs`
-- **首页大标题**：`site.config.mjs` 里的 `hero`
+- **所有站点文案**（名字、首页大标题、导航、页脚、404、搜索框提示…）：`content/site.json`，或写作台上的「站点文案」页签
+- **社交链接**：`site.config.mjs` 的 `socials`
+- **视觉风格**：`site.config.mjs` 的 `skin`
 - **配色**：`src/styles.css` 顶部 `:root` 与 `[data-theme="dark"]` 的 CSS 变量
 - **按钮、间距、字号**：同一个文件里的对应区块
 - **网站图标**：`build.mjs` 里 head 中的内联 SVG
+
+文案里的 `{n}` 会被替换成数字（比如「共 {n} 篇」），`<br>`、`<em>` 这类标签只在大标题里生效。
 
 ## 部署
 

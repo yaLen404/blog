@@ -1,0 +1,86 @@
+{
+  "site": {
+    "title": "叶志汉",
+    "handle": "Zhihan",
+    "description": "叶志汉的个人博客：大模型推理优化、算法竞赛与工程实践。",
+    "tagline": "在推理系统里寻找下一个瓶颈",
+    "email": ""
+  },
+  "nav": {
+    "posts": "文章",
+    "archive": "归档",
+    "tags": "标签",
+    "about": "关于"
+  },
+  "home": {
+    "eyebrow": "杭州 · 杭州师范大学 · 计算机科学与技术 · 2023",
+    "title": "在推理系统里<br>寻找下一个<em>瓶颈</em>",
+    "lede": "我是叶志汉。这里记录我对大模型推理优化、算法竞赛与工程实践的理解——尽量把来龙去脉讲清楚，而不是只给结论。",
+    "statPosts": "{n} 篇文章",
+    "statTags": "{n} 个标签",
+    "updated": "最近更新",
+    "recent": "近期文章",
+    "more": "全部文章",
+    "nowLabel": "Now",
+    "nowText": "目前在折腾 nano-vllm 上的 MoE 推理与投机解码，也在准备下一场区域赛。",
+    "nowAbout": "关于我",
+    "nowRss": "订阅 RSS"
+  },
+  "pages": {
+    "archive": {
+      "eyebrow": "Archive",
+      "title": "全部文章",
+      "lede": "共 {n} 篇，按时间倒序排列。",
+      "tagsLink": "按标签浏览"
+    },
+    "tags": {
+      "eyebrow": "Tags",
+      "title": "标签",
+      "lede": "{n} 个标签，点进去是相关的全部文章。"
+    },
+    "tag": {
+      "eyebrow": "Tag",
+      "lede": "共 {n} 篇 · ",
+      "back": "返回全部标签"
+    },
+    "about": {
+      "eyebrow": "About",
+      "title": "关于",
+      "contactTitle": "Contact",
+      "contactLead": "想聊推理优化、聊比赛，或者只是指出文中的错误，都欢迎来信。",
+      "contactLeadNoEmail": "想聊推理优化、聊比赛，或者指出文中的错误，欢迎在 GitHub 上找我。"
+    },
+    "post": {
+      "minutes": "约 {n} 分钟",
+      "minutesShort": "{n} 分钟",
+      "toc": "本文目录",
+      "prev": "← 上一篇",
+      "next": "下一篇 →"
+    },
+    "notFound": {
+      "code": "404",
+      "title": "这一页还没写",
+      "text": "你要找的地址不存在，或者已经被我改名了。",
+      "home": "回到首页",
+      "search": "搜索一下"
+    }
+  },
+  "search": {
+    "placeholder": "搜索标题、标签或正文…",
+    "empty": "没有找到相关文章",
+    "hintSelect": "↑ ↓ 选择",
+    "hintOpen": "↵ 打开",
+    "hintClose": "Esc 关闭"
+  },
+  "footer": {
+    "note": "纯手工静态站 · 由 200 行 Node 脚本从 Markdown 生成",
+    "rss": "RSS",
+    "email": "邮箱"
+  },
+  "meta": {
+    "skip": "跳到正文",
+    "brandAria": "返回首页",
+    "searchAria": "搜索文章（快捷键 /）",
+    "themeAria": "切换深浅色"
+  }
+}

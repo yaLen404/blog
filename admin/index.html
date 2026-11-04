@@ -16,6 +16,10 @@
       <small>本地编辑 · 保存即构建</small>
     </div>
   </div>
+  <div class="tabs">
+    <button class="tab is-active" type="button" data-tab="posts">文章</button>
+    <button class="tab" type="button" data-tab="site">站点文案</button>
+  </div>
   <div class="top-actions">
     <a class="ghost" href="/" target="_blank" rel="noopener">打开站点 ↗</a>
     <button class="ghost" id="btn-build" type="button">重新构建</button>
@@ -100,6 +104,23 @@
         <button type="button" class="danger" id="btn-del">删除</button>
       </div>
     </form>
+
+    <section class="siteform" id="siteform" hidden>
+      <div class="siteform-body">
+        <p class="siteform-note">
+          这里改的是站点自身的文案（首页大标题、导航、页脚、404、搜索框等）。
+          <code>{n}</code> 会被替换成数字，<code>&lt;br&gt;</code> 换行、<code>&lt;em&gt;</code> 高亮只在大标题里可用。
+        </p>
+        <div id="siteform-fields"></div>
+      </div>
+      <div class="status">
+        <span class="file">content/site.json</span>
+        <span class="dirty" id="site-dirty"></span>
+        <span class="spacer"></span>
+        <span class="hint">保存后自动重新构建</span>
+        <button type="button" class="primary" id="btn-site-save">保存文案</button>
+      </div>
+    </section>
   </main>
 
   <section class="preview" id="preview" hidden>
